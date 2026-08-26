@@ -12,6 +12,8 @@ live from the simulated data rather than asserted.
 100% behaviorally accurate to real ScyllaDB internals. Not affiliated with or endorsed by
 ScyllaDB, Inc.
 
+![Compaction simulator demo](docs/compaction-demo.gif)
+
 ## Strategies
 
 | Class | What the simulator models |
