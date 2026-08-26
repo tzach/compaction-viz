@@ -1,0 +1,1523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ScyllaDB Compaction Strategy Simulator — Write, Flush, Compact</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='64'%20height='64'%20viewBox='14%2033%20173%20173'%3E%3Cpath%20fill='%2357D1E5'%20d='M100.5%2039C62.5238%2039%2036%2062.5028%2036%2096.1526C36%20105.504%2041.7103%20136.124%2046.5237%20160.273C49.9876%20177.652%2052.9855%20191.678%2053.0574%20192.013C54.0194%20196.269%2058.158%20199.053%2062.5222%20198.335L63.4291%20198.194L62.7811%20197.547C61.5501%20196.321%2060.6483%20194.828%2060.1706%20193.238C59.9067%20192.314%2059.7831%20191.528%2059.6629%20190.767C59.6094%20190.423%2059.5543%20190.081%2059.4908%20189.738L57.809%20179.562C57.0658%20174.958%2056.3576%20170.385%2055.7079%20165.97C55.6645%20165.676%2055.8699%20165.401%2056.1672%20165.358C56.4561%20165.32%2056.7167%20165.504%2056.7751%20165.78C57.6971%20170.124%2058.624%20174.658%2059.5309%20179.252L61.4917%20189.384C61.5568%20189.703%2061.6203%20190.038%2061.6821%20190.37C61.8324%20191.169%2061.9861%20191.997%2062.1781%20192.613C62.7193%20194.35%2063.8633%20195.882%2065.4015%20196.932C65.5702%20197.047%2065.7406%20197.16%2065.9159%20197.261C66.7861%20197.767%2067.7398%20198.107%2068.7485%20198.27C69.7707%20198.436%2070.7945%20198.411%2071.7882%20198.197C72.8855%20197.971%2073.9645%20197.487%2074.9114%20196.804L75.2822%20196.537L75.0183%20196.163C74.2651%20195.093%2073.734%20193.924%2073.4367%20192.693C73.2162%20191.744%2073.1411%20190.93%2073.0693%20190.142C73.0392%20189.813%2073.0091%20189.486%2072.9707%20189.163L71.9569%20178.937C71.5127%20174.262%2071.1068%20169.671%2070.7527%20165.29C70.741%20165.145%2070.7861%20165.008%2070.8797%20164.898C70.9732%20164.788%2071.1051%20164.722%2071.2504%20164.71C71.5427%20164.683%2071.7882%20164.89%2071.83%20165.17C72.4613%20169.521%2073.091%20174.086%2073.6989%20178.741L74.9933%20188.941C75.0367%20189.253%2075.0734%20189.571%2075.1119%20189.888C75.2154%20190.739%2075.3123%20191.543%2075.4776%20192.183C75.6664%20192.929%2075.972%20193.655%2076.3812%20194.34C76.9674%20195.317%2077.7708%20196.183%2078.706%20196.846L78.7812%20196.901C78.833%20196.939%2078.8831%20196.977%2078.9349%20197.01C80.6084%20198.117%2082.7144%20198.581%2084.722%20198.287C86.7078%20197.994%2088.5851%20196.931%2089.8661%20195.374C90.1834%20194.998%2090.4707%20194.584%2090.7195%20194.144L90.8231%20193.959L90.7513%20193.762C90.5976%20193.33%2090.464%20192.869%2090.3454%20192.359C90.1901%20191.648%2090.1133%20190.769%2090.1082%20189.665L90.0281%20184.613C89.9095%20178.215%2089.8577%20171.608%2089.8728%20164.414C89.8728%20164.117%2090.1149%20163.876%2090.4156%20163.876C90.7012%20163.876%2090.9383%20164.1%2090.9567%20164.383C91.3876%20171.587%2091.72%20178.186%2091.9705%20184.555L92.1826%20189.6C92.2193%20190.514%2092.2461%20191.176%2092.4147%20191.932C92.5667%20192.53%2092.7939%20193.31%2093.1897%20194.003C93.2114%20194.046%2093.2365%20194.084%2093.2832%20194.157C94.7095%20196.721%2097.4854%20198.361%20100.365%20198.361H100.488C103.369%20198.423%20106.277%20196.75%20107.74%20194.129C107.765%20194.091%20107.79%20194.052%20107.804%20194.024C108.133%20193.443%20108.388%20192.758%20108.584%20191.927C108.746%20191.214%20108.774%20190.586%20108.812%20189.717L109.028%20184.557C109.263%20178.521%20109.592%20171.922%20110.037%20164.383C110.055%20164.085%20110.314%20163.863%20110.609%20163.876C110.895%20163.892%20111.119%20164.128%20111.121%20164.414C111.126%20171.967%20111.072%20178.573%20110.959%20184.613L110.877%20189.665C110.868%20190.368%20110.855%20191.433%20110.646%20192.352C110.538%20192.846%20110.402%20193.32%20110.245%20193.758L110.175%20193.958L110.279%20194.142C110.528%20194.584%20110.815%20194.998%20111.129%20195.37C112.42%20196.942%20114.299%20198.004%20116.28%20198.28C118.291%20198.574%20120.402%20198.112%20122.065%20197.017C122.119%20196.982%20122.169%20196.946%20122.22%20196.907L122.296%20196.853C123.234%20196.196%20124.039%20195.33%20124.624%20194.348C125.033%20193.66%20125.334%20192.934%20125.517%20192.186C125.679%20191.54%20125.778%20190.727%20125.883%20189.87C125.92%20189.561%20125.958%20189.248%20126%20188.939L127.293%20178.746C127.901%20174.098%20128.53%20169.533%20129.163%20165.174C129.183%20165.031%20129.26%20164.904%20129.375%20164.82C129.491%20164.733%20129.634%20164.697%20129.776%20164.717C130.059%20164.757%20130.261%20165.012%20130.239%20165.295C129.885%20169.685%20129.477%20174.277%20129.035%20178.94L128.021%20189.158C127.983%20189.486%20127.952%20189.807%20127.922%20190.131C127.849%20190.923%20127.774%20191.743%20127.558%20192.693C127.268%20193.931%20126.738%20195.103%20125.985%20196.176L125.723%20196.55L126.094%20196.818C127.041%20197.501%20128.121%20197.979%20129.213%20198.199C130.211%20198.405%20131.229%20198.43%20132.238%20198.268C133.257%20198.109%20134.214%20197.772%20135.084%20197.266C135.259%20197.165%20135.43%20197.054%20135.597%20196.941C137.148%20195.889%20138.292%20194.353%20138.819%20192.618C139.007%20191.993%20139.164%20191.158%20139.316%20190.35C139.378%20190.026%20139.438%20189.702%20139.502%20189.384L141.461%20179.257C142.369%20174.658%20143.296%20170.123%20144.218%20165.784C144.28%20165.493%20144.569%20165.307%20144.859%20165.366C145.138%20165.425%20145.325%20165.692%20145.285%20165.973C144.636%20170.38%20143.931%20174.952%20143.184%20179.562L141.504%20189.732C141.441%20190.082%20141.386%20190.421%20141.332%20190.764C141.212%20191.526%20141.088%20192.316%20140.829%20193.236C140.365%20194.83%20139.467%20196.322%20138.229%20197.554L137.653%20198.144L138.464%20198.337L138.511%20198.347C138.964%20198.421%20139.416%20198.458%20139.861%20198.458C143.667%20198.458%20147.076%20195.822%20147.941%20191.997C148.013%20191.659%20151.118%20177.125%20154.658%20159.314C159.43%20135.308%20164.995%20105.347%20164.995%2096.1576C165%2062.5028%20138.476%2039%20100.5%2039Z'/%3E%3Cpath%20fill='%2393E1EF'%20d='M54.462%2054.5662C42.8093%2064.6682%2036%2079.1076%2036%2096.1527C36%20112.231%2052.8853%20191.213%2053.0574%20192.014C53.4382%20193.699%2054.3233%20195.148%2055.5158%20196.244C51.3271%20176.301%2037.9975%20111.661%2037.9975%2096.6778C37.9975%2079.8853%2044.0017%2065.3928%2054.462%2054.5662Z'/%3E%3Cpath%20fill='%234D9BB6'%20d='M83.2338%2063.6694C67.7631%2063.6694%2055.175%2076.1944%2055.175%2091.5876C55.175%20106.981%2067.7631%20119.506%2083.2338%20119.506C98.7045%20119.506%20111.292%20106.981%20111.292%2091.5876C111.292%2076.1944%2098.7045%2063.6694%2083.2338%2063.6694Z'/%3E%3Cpath%20fill='%23ffffff'%20d='M52.3909%2089.3342C52.3909%20104.727%2064.9789%20117.252%2080.4513%20117.252C95.9236%20117.252%20108.51%20104.727%20108.51%2089.3342C108.51%2073.9409%2095.922%2061.4143%2080.4513%2061.4143C64.9806%2061.4143%2052.3909%2073.9393%2052.3909%2089.3342Z'/%3E%3Cpath%20fill='%233B2D55'%20d='M99.6014%2089.743C99.1905%20101.465%2090.7729%20107.667%2085.405%20106.404C80.9056%20105.346%2080.3461%2095.3948%2083.1603%2092.7824C85.0092%2091.0675%2088.6802%2090.6022%2088.7253%2089.3641C88.7687%2088.1277%2085.1378%2087.4082%2083.4142%2085.5686C80.7903%2082.7684%2082.0446%2072.8807%2086.6075%2072.1363C92.0506%2071.2489%20100.012%2078.019%2099.6014%2089.7413'/%3E%3Cpath%20fill='%233B2D55'%20d='M62.6273%20127.491C79.6863%20129.967%2097.5771%20125.734%20111.667%20115.88C113.626%20114.582%20115.64%20117.404%20113.723%20118.81C106.255%20123.88%2097.8276%20127.527%2089.0275%20129.507C80.2358%20131.489%2071.0783%20131.805%2062.188%20130.437C61.3713%20130.311%2060.8118%20129.551%2060.9371%20128.739C61.0623%20127.933%2061.8173%20127.378%2062.6273%20127.492'/%3E%3Cpath%20fill='%233B2D55'%20d='M113.639%20120.539C113.158%20118.284%20111.104%20116.519%20108.844%20116.44C106.474%20116.274%20106.629%20112.809%20109.008%20112.855C110.933%20113.109%20112.726%20114.13%20113.975%20115.516C115.044%20116.543%20117.392%20121.153%20114.91%20121.49C114.299%20121.538%20113.758%20121.119%20113.639%20120.538'/%3E%3C/svg%3E" />
+<script>
+// ScyllaDB DS theme boot snippet (runs before the stylesheet so there's no flash).
+// No manual toggle — it just follows the OS, same as the HA simulator.
+(function () {
+  var KEY = "scylladb-ds-theme";
+  var root = document.documentElement;
+  var sysDark = window.matchMedia("(prefers-color-scheme: dark)");
+  function resolve(pref) { return pref === "system" ? (sysDark.matches ? "dark" : "light") : pref; }
+  function setTheme(pref) { root.setAttribute("data-theme", resolve(pref)); }
+  setTheme(localStorage.getItem(KEY) || "system");
+  sysDark.addEventListener("change", function () {
+    if ((localStorage.getItem(KEY) || "system") === "system") setTheme("system");
+  });
+})();
+</script>
+<link rel="stylesheet" href="scylladb-ds.css" />
+<style>
+  /* ---------- bridge: simulator-local var names -> ScyllaDB DS tokens ----------
+     Same trick as the HA simulator: local aliases so the rest of the sheet reads
+     plainly and still inherits whichever DS token is live for the current theme. */
+  :root {
+    --bg: var(--bg-page);
+    --surface: var(--bg-surface);
+    --surface-2: var(--bg-surface-alt);
+    --border: var(--border-color);
+    --text: var(--text-color);
+    --text-dim: var(--text-muted);
+    --text-faint: var(--text-disabled);
+
+    --accent: var(--btn-primary-bg);
+    --ok: var(--status-success);
+    --ok-bg: var(--status-success-bg);
+    --danger: var(--status-error);
+    --danger-bg: var(--status-error-bg);
+    --warn: var(--status-warning);
+    --warn-bg: var(--status-warning-bg);
+
+    --font-ui: var(--font-family);
+
+    /* Depth ramp for SSTable blocks: a single hue, light -> dark, so "how deep in
+       the LSM tree is this file" reads as magnitude rather than as identity.
+       Sequential ramp per the dataviz rules — never a rainbow. */
+    --tier-0: var(--color-primary-200);
+    --tier-1: var(--color-primary-300);
+    --tier-2: var(--color-primary-400);
+    --tier-3: var(--color-primary-500);
+    --tier-4: var(--color-primary-600);
+    --tier-5: var(--color-primary-700);
+    --tier-ink: var(--color-gray-900);
+
+    /* Two-series categorical pair for the amplification chart. primary-500 +
+       warning-500 — validated for CVD separation against the light surface
+       (the DS's own chart-1/chart-2 pair is two blues and fails deutan). */
+    --series-space: var(--color-primary-500);
+    --series-write: var(--color-warning-500);
+  }
+  [data-theme="dark"] {
+    --tier-0: var(--color-primary-800);
+    --tier-1: var(--color-primary-700);
+    --tier-2: var(--color-primary-600);
+    --tier-3: var(--color-primary-500);
+    --tier-4: var(--color-primary-400);
+    --tier-5: var(--color-primary-300);
+    --tier-ink: var(--color-gray-50);
+    /* Re-stepped for the dark surface: warning-500 sits above the dark lightness
+       band, warning-600 is inside it. */
+    --series-space: var(--color-primary-500);
+    --series-write: var(--color-warning-600);
+  }
+  .sst { --tier-ink: var(--color-gray-900); }
+  .sst[data-depth="4"], .sst[data-depth="5"] { --tier-ink: var(--color-gray-50); }
+  [data-theme="dark"] .sst { --tier-ink: var(--color-gray-50); }
+  [data-theme="dark"] .sst[data-depth="3"],
+  [data-theme="dark"] .sst[data-depth="4"],
+  [data-theme="dark"] .sst[data-depth="5"] { --tier-ink: var(--color-gray-900); }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  .wrap {
+    /* Sized for a desktop/presentation screen — no down-scaling, so every size
+       below is the size it actually renders at. */
+    max-width: 1760px;
+    margin: 0 auto;
+    padding: 28px 28px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ---------- header ---------- */
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-bottom: var(--border-w) solid var(--border);
+    padding-bottom: 18px;
+  }
+  header.top h1 {
+    font-size: 25px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    font-family: var(--font-family);
+  }
+  header.top h1 span.accent { color: var(--accent); }
+  .head-right { display: flex; align-items: center; gap: 8px; }
+
+  /* ---------- cards ---------- */
+  .panel {
+    background: var(--surface);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-1);
+    padding: 18px 20px;
+  }
+  .panel h2, .panel h3 {
+    margin: 0;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-faint);
+    font-weight: 700;
+  }
+
+  /* ---------- controls ---------- */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px 32px;
+    align-items: flex-end;
+  }
+  .ctrl { display: flex; flex-direction: column; gap: 8px; width: 200px; }
+  .ctrl.wide { width: 274px; }
+  .ctrl label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-faint);
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .ctrl label .val {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .ctrl select.form-input, .ctrl input[type="number"].form-input { width: 100%; }
+  .ctrl input[type="range"] { width: 100%; }
+  .divider { width: 1px; align-self: center; height: 46px; background: var(--border); }
+  .btn-row { display: flex; gap: 6px; align-items: center; }
+  .opt-group[hidden] { display: none; }
+
+  /* ---------- main layout ---------- */
+  .stage-main { display: flex; gap: 20px; align-items: stretch; flex-wrap: wrap; }
+  .col-stage { flex: 2.3 1 760px; min-width: 560px; display: flex; flex-direction: column; gap: 20px; }
+  .col-side { flex: 1 1 380px; min-width: 360px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* ---------- write path pipeline ---------- */
+  .pipe { display: flex; align-items: stretch; gap: 12px; margin-top: 16px; }
+  .pipe-node {
+    flex: 1;
+    background: var(--surface-2);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 11px 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .pipe-node .pn-title {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .pipe-node .pn-title b { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .pipe-node .pn-sub { font-size: 12px; color: var(--text-faint); font-family: var(--font-mono); }
+  .pipe-arrow {
+    align-self: center;
+    color: var(--text-faint);
+    font-size: 20px;
+    flex: none;
+    width: 20px;
+    text-align: center;
+  }
+  .pipe-node.pulse { border-color: var(--accent); }
+  .meter { height: 12px; background: var(--bg-page); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--border); }
+  .meter-fill { height: 100%; width: 0; background: var(--accent); transition: width .25s ease; }
+  .meter-fill.hot { background: var(--warn); }
+  .meter.commitlog .meter-fill { background: var(--color-primary-400); }
+
+  /* ---------- disk / sstable field ---------- */
+  .disk { position: relative; margin-top: 16px; min-height: 340px; --lane-x: 178px; }
+  .lane-layer { position: absolute; inset: 0; }
+  /* Blocks live in their own layer, offset past the labels, so a block's left/width
+     are plain percentages of the track and it can be tweened between rows without
+     ever changing parent (which would restart the transition). */
+  .sst-layer { position: absolute; left: var(--lane-x); right: 0; top: 0; bottom: 0; }
+  .row-label {
+    position: absolute;
+    left: 0;
+    width: calc(var(--lane-x) - 12px);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    text-align: right;
+    line-height: 1.25;
+  }
+  .row-label em { display: block; font-style: normal; font-weight: 400; text-transform: none; letter-spacing: 0; opacity: .8; }
+  .row-track {
+    position: absolute;
+    left: var(--lane-x);
+    right: 0;
+    height: 34px;
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    min-width: 0;
+  }
+  .row-track.keyspace { background: repeating-linear-gradient(90deg, transparent 0 24px, var(--border-faint) 24px 25px), var(--bg-page); }
+  .sst {
+    position: absolute;
+    height: 28px;
+    min-width: 7px;
+    border-radius: var(--radius-sm);
+    background: var(--tier-c, var(--tier-2));
+    border: 1px solid color-mix(in srgb, var(--tier-ink) 22%, transparent);
+    color: var(--tier-ink);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: left .18s ease, width .18s ease, top .18s ease, opacity .18s ease, background .18s ease;
+    cursor: default;
+  }
+  .sst.fresh { animation: drop-in .3s ease both; }
+  @keyframes drop-in {
+    from { transform: translateY(-30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .sst.compacting {
+    outline: 2px solid var(--warn);
+    outline-offset: 1px;
+    animation: sel-pulse 1.1s ease-in-out infinite;
+  }
+  @keyframes sel-pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+  .sst.released { opacity: 0; }
+  .sst.output {
+    background: var(--ok-bg);
+    border: 1px dashed var(--ok);
+    color: var(--ok);
+  }
+  .sst.expired { opacity: .35; }
+  .disk-empty {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-faint);
+    padding: 30px 0;
+    text-align: center;
+  }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: auto; padding-top: 18px; font-size: 12px; color: var(--text-faint); font-family: var(--font-mono); }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .swatch { width: 13px; height: 13px; border-radius: 2px; border: 1px solid color-mix(in srgb, var(--text) 20%, transparent); }
+  .ramp { display: inline-flex; }
+  .ramp i { width: 13px; height: 13px; display: block; border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); }
+
+  /* ---------- KPIs ---------- */
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .kpi {
+    background: var(--surface-2);
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 11px 13px;
+  }
+  .kpi .k-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; }
+  .kpi .k-value { font-family: var(--font-mono); font-size: 23px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-emphasis, var(--text)); line-height: 1.25; }
+  .kpi .k-value small { font-size: 14px; font-weight: 400; color: var(--text-faint); }
+  .kpi .k-note { font-size: 11px; color: var(--text-faint); font-family: var(--font-mono); }
+  .kpi.hi .k-value { color: var(--warn); }
+
+  /* ---------- chart ---------- */
+  .chart-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .chart-legend { display: flex; gap: 14px; font-size: 12px; font-family: var(--font-mono); color: var(--text-dim); }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .chart-legend i { width: 15px; height: 2px; display: block; border-radius: 1px; }
+  #chart { width: 100%; height: 190px; display: block; margin-top: 12px; overflow: visible; }
+  #chart .grid { stroke: var(--border); stroke-width: 1; }
+  #chart .axis-text { fill: var(--text-faint); font-family: var(--font-mono); font-size: 9px; }
+  #chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  #chart .line.space { stroke: var(--series-space); }
+  #chart .line.write { stroke: var(--series-write); }
+  #chart .dlabel { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+  #chart .dlabel.space { fill: var(--series-space); }
+  #chart .dlabel.write { fill: var(--series-write); }
+  #chart .crosshair { stroke: var(--text-faint); stroke-width: 1; stroke-dasharray: 3 3; }
+  #chart .hover-dot { stroke: var(--surface); stroke-width: 2; }
+  .chart-tip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--bg-overlay, var(--surface));
+    border: var(--border-w) solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-2);
+    padding: 6px 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.45;
+    white-space: nowrap;
+    z-index: 20;
+  }
+  .chart-tip b { font-weight: 700; }
+  .chart-wrap { position: relative; }
+
+  /* ---------- explainer ---------- */
+  .explain p { margin: 8px 0 0; font-size: 12.5px; color: var(--text-dim); line-height: 1.55; }
+  .explain .verdict { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+  .explain .verdict div { display: flex; align-items: center; gap: 10px; font-size: 12.5px; font-family: var(--font-mono); color: var(--text-dim); }
+  .explain .verdict .vl { width: 92px; flex: none; color: var(--text-faint); }
+  .explain .verdict .bar { flex: 1; height: 8px; background: var(--bg-page); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+  .explain .verdict .bar i { display: block; height: 100%; background: var(--accent); }
+  .explain .verdict .vv { width: 56px; flex: none; text-align: right; }
+  .explain code { font-family: var(--font-mono); font-size: 11.5px; background: var(--bg-code, var(--surface-2)); padding: 0 4px; border-radius: 3px; }
+
+  .page-footer { text-align: center; font-size: 12.5px; color: var(--text-faint); padding-top: 4px; }
+  .page-footer a { color: var(--accent); text-decoration: none; }
+  .page-footer a:hover, .page-footer a:focus-visible { text-decoration: underline; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-sm); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }
+  @media (max-width: 980px) {
+    .controls { flex-direction: column; align-items: stretch; }
+    .divider { display: none; }
+    .disk { --lane-x: 128px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>ScyllaDB <span class="accent">Compaction Strategy</span> Simulator</h1>
+    </div>
+    <div class="head-right">
+      <button type="button" class="btn btn--xs" id="btnStep">Step</button>
+      <button type="button" class="btn btn--xs btn--primary" id="btnPlay">Pause</button>
+      <button type="button" class="btn btn--xs" id="btnReset">Reset</button>
+    </div>
+  </header>
+
+  <!-- ---------------- controls ---------------- -->
+  <div class="panel controls">
+    <div class="ctrl wide">
+      <label for="strategySelect">Compaction strategy</label>
+      <select id="strategySelect" class="form-input form-input--compact">
+        <option value="stcs" selected>STCS — Size-Tiered</option>
+        <option value="lcs">LCS — Leveled</option>
+        <option value="ics">ICS — Incremental</option>
+        <option value="twcs">TWCS — Time-Window</option>
+      </select>
+    </div>
+
+    <div class="ctrl wide">
+      <label for="workloadSelect">Workload</label>
+      <select id="workloadSelect" class="form-input form-input--compact">
+        <option value="hot">Overwrite-heavy (80/20 hot keys)</option>
+        <option value="uniform">Uniform random keys</option>
+        <option value="ts">Time series (new key each write)</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- strategy sub-properties: only the ones that exist for the selected class -->
+    <div class="ctrl opt-group" data-for="stcs ics twcs">
+      <label for="minThRange">min_threshold <span class="val" id="minThVal">4</span></label>
+      <input type="range" id="minThRange" min="2" max="8" value="4" step="1" />
+    </div>
+
+    <div class="ctrl opt-group" data-for="ics">
+      <label for="fragRange">sstable_size_in_mb <span class="val" id="fragVal">12</span></label>
+      <input type="range" id="fragRange" min="4" max="48" value="12" step="4" />
+    </div>
+
+    <div class="ctrl wide opt-group" data-for="ics">
+      <label for="sagSelect">space_amplification_goal</label>
+      <select id="sagSelect" class="form-input form-input--compact">
+        <option value="0" selected>null (off)</option>
+        <option value="1.25">1.25</option>
+        <option value="1.5">1.5</option>
+        <option value="2">2.0</option>
+      </select>
+    </div>
+
+    <div class="ctrl opt-group" data-for="lcs">
+      <label for="lcsSizeRange">sstable_size_in_mb <span class="val" id="lcsSizeVal">12</span></label>
+      <input type="range" id="lcsSizeRange" min="6" max="30" value="12" step="2" />
+    </div>
+
+    <div class="ctrl opt-group" data-for="twcs">
+      <label for="windowRange">compaction_window <span class="val" id="windowVal">20 ticks</span></label>
+      <input type="range" id="windowRange" min="8" max="48" value="20" step="4" />
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="ctrl" style="min-width:104px;">
+      <label for="speedRange">Speed <span class="val" id="speedVal">1&times;</span></label>
+      <input type="range" id="speedRange" min="1" max="8" value="1" step="1" />
+    </div>
+  </div>
+
+  <!-- ---------------- main ---------------- -->
+  <div class="stage-main">
+    <div class="col-stage">
+
+      <div class="panel">
+        <h2>Write path</h2>
+        <div class="pipe">
+          <div class="pipe-node" id="pnClient">
+            <div class="pn-title"><span>Client</span><b id="cWrites">0</b></div>
+            <div class="pn-sub" id="cWorkload">writes issued</div>
+          </div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node" id="pnCommitlog">
+            <div class="pn-title"><span>Commitlog</span><b id="cClog">0 MB</b></div>
+            <div class="meter commitlog"><div class="meter-fill" id="clogFill"></div></div>
+            <div class="pn-sub">append-only, truncated on flush</div>
+          </div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node" id="pnMemtable">
+            <div class="pn-title"><span>Memtable</span><b id="cMem">0 / 12 MB</b></div>
+            <div class="meter"><div class="meter-fill" id="memFill"></div></div>
+            <div class="pn-sub" id="memSub">in RAM, sorted by key</div>
+          </div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node" id="pnFlush">
+            <div class="pn-title"><span>Flush</span><b id="cFlushes">0</b></div>
+            <div class="pn-sub" id="flushSub">SSTables written</div>
+          </div>
+          <div class="pipe-arrow">&rarr;</div>
+          <div class="pipe-node" id="pnCompact">
+            <div class="pn-title"><span>Compaction</span><b id="cCompactions">0</b></div>
+            <div class="meter"><div class="meter-fill" id="compFill"></div></div>
+            <div class="pn-sub" id="compSub">idle</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1; display:flex; flex-direction:column;">
+        <h2>SSTables on disk <span id="diskShape" style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--text-faint)"></span></h2>
+        <div class="disk" id="disk"></div>
+        <div class="legend">
+          <span><span class="ramp"><i style="background:var(--tier-0)"></i><i style="background:var(--tier-1)"></i><i style="background:var(--tier-2)"></i><i style="background:var(--tier-3)"></i><i style="background:var(--tier-4)"></i><i style="background:var(--tier-5)"></i></span> newer / smaller &rarr; older / larger</span>
+          <span><span class="swatch" style="background:var(--warn-bg);outline:2px solid var(--warn);outline-offset:-1px"></span> selected for compaction</span>
+          <span><span class="swatch" style="background:var(--ok-bg);border-style:dashed;border-color:var(--ok)"></span> being written</span>
+          <span>block width &prop; size on disk</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-side">
+      <div class="panel">
+        <h2>Amplification</h2>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="k-label">SSTables</div><div class="k-value" id="kSst">0</div><div class="k-note" id="kSstNote">&nbsp;</div></div>
+          <div class="kpi"><div class="k-label">On disk</div><div class="k-value" id="kDisk">0<small> MB</small></div><div class="k-note" id="kDiskNote">&nbsp;</div></div>
+          <div class="kpi"><div class="k-label">Live data</div><div class="k-value" id="kLive">0<small> MB</small></div><div class="k-note">unique live rows</div></div>
+          <div class="kpi" id="kpiSA"><div class="k-label">Space amp</div><div class="k-value" id="kSA">1.00<small>&times;</small></div><div class="k-note" id="kSANote">peak 1.00&times;</div></div>
+          <div class="kpi" id="kpiWA"><div class="k-label">Write amp</div><div class="k-value" id="kWA">1.00<small>&times;</small></div><div class="k-note">bytes written / flushed</div></div>
+          <div class="kpi" id="kpiRA"><div class="k-label">Read amp</div><div class="k-value" id="kRA">0</div><div class="k-note" id="kRANote">files per lookup</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="chart-head">
+          <h3>Amplification over time</h3>
+          <div class="chart-legend">
+            <span><i style="background:var(--series-space)"></i>Space</span>
+            <span><i style="background:var(--series-write)"></i>Write</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="chart" viewBox="0 0 320 132" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Space amplification and write amplification over simulated time"></svg>
+          <div class="chart-tip" id="chartTip" hidden></div>
+        </div>
+      </div>
+
+      <div class="panel explain" style="flex:1;">
+        <h2 id="expName">Strategy</h2>
+        <div class="verdict" id="expVerdict"></div>
+        <div style="font-size:11.5px;color:var(--text-faint);margin-top:12px;font-family:var(--font-mono)">typical at production scale &mdash; the tiles above measure <em>this</em> run</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    Educational simulator &mdash; the strategy bucketing/level rules follow ScyllaDB's source, but this is not a
+    faithful model of real ScyllaDB behavior (no bloom filters, no shards, no tombstone GC rules).
+    &middot; <a href="https://docs.scylladb.com/manual/stable/cql/compaction.html" target="_blank" rel="noopener noreferrer">Compaction docs</a>
+    &middot; <a href="https://www.scylladb.com/2021/04/28/incremental-compaction-2-0-a-revolutionary-space-and-write-optimized-compaction-strategy/" target="_blank" rel="noopener noreferrer">ICS 2.0 blog post</a>
+  </footer>
+</div>
+<script>
+(function () {
+"use strict";
+
+/* ============================================================================
+   ScyllaDB compaction strategy simulator.
+
+   The model is deliberately small but the *selection* rules are ports of the
+   real thing (scylladb/compaction/*.cc):
+
+     - STCS  size_tiered_compaction_strategy::get_buckets / most_interesting_bucket
+     - ICS   incremental_compaction_strategy — identical bucketing, but over
+             SSTable *runs* instead of individual files, plus the SAG cross-tier job
+     - LCS   leveled_manifest — L0 threshold, per-level score, fan-out of 10
+     - TWCS  time_window_compaction_strategy — bucket by window, STCS inside the
+             current window, seal older windows, drop fully-expired SSTables
+
+   One row of data == 1 "MB", so every size in the UI is in the same unit as the
+   CQL sub-properties it mirrors.
+   ========================================================================== */
+
+var KEYSPACE      = 240;   // distinct keys for the non-time-series workloads
+var COMPACT_RATE  = 24;    // MB of input merged per tick
+var HIST_MAX      = 240;   // points kept for the amplification chart
+var LCS_FANOUT    = 10;    // leveled_manifest::leveled_fan_out
+var MAX_THRESHOLD = 32;    // max_compaction_threshold default
+var MAX_L0        = 32;    // leveled_manifest::MAX_COMPACTING_L0
+
+var $ = function (id) { return document.getElementById(id); };
+
+/* ---------------------------------------------------------------- options -- */
+var opt = {
+  strategy: "stcs",
+  workload: "hot",
+  rate: 3,
+  memThreshold: 12,
+  minThreshold: 4,
+  fragSize: 12,
+  sag: 0,
+  lcsSize: 12,
+  window: 20,
+  ttl: 0,
+  speed: 1
+};
+
+/* ------------------------------------------------------------------ state -- */
+var S, timer = null, running = true;
+
+// Deterministic PRNG so a Reset with the same settings replays the same run.
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function newState() {
+  return {
+    tick: 0,
+    nextId: 1,
+    nextRun: 1,
+    mem: new Map(),        // key -> ts (the row version)
+    commitlog: 0,
+    ssts: [],
+    job: null,
+    writes: 0,
+    flushes: 0,
+    compactions: 0,
+    flushedBytes: 0,       // memtable -> disk
+    writtenBytes: 0,       // everything ever written to disk (flush + compaction output)
+    peakSA: 1,
+    seqKey: 0,
+    lastCompactedKey: {},  // LCS: per-level round-robin cursor
+    hist: [],
+    log: [],
+    rng: mulberry32(0xC0FFEE)
+  };
+}
+
+/* ------------------------------------------------------------- primitives -- */
+function mkSST(rows, meta) {
+  // rows: array of [key, ts] sorted by key. Returns an SSTable record.
+  var e = new Map(), minK = Infinity, maxK = -Infinity, minT = Infinity, maxT = -Infinity;
+  for (var i = 0; i < rows.length; i++) {
+    var k = rows[i][0], t = rows[i][1];
+    e.set(k, t);
+    if (k < minK) minK = k;
+    if (k > maxK) maxK = k;
+    if (t < minT) minT = t;
+    if (t > maxT) maxT = t;
+  }
+  return {
+    id: S.nextId++,
+    e: e,
+    size: rows.length,
+    level: meta.level || 0,
+    run: meta.run || 0,
+    frag: meta.frag || 0,
+    win: meta.win === undefined ? null : meta.win,
+    minKey: minK, maxKey: maxK,
+    minTs: minT, maxTs: maxT,
+    born: S.tick
+  };
+}
+
+function sstExpired(s) { return opt.ttl > 0 && s.maxTs + opt.ttl <= S.tick; }
+function rowExpired(ts) { return opt.ttl > 0 && ts + opt.ttl <= S.tick; }
+
+function diskBytes() {
+  var n = 0;
+  for (var i = 0; i < S.ssts.length; i++) n += S.ssts[i].size;
+  if (S.job) n += S.job.partialBytes;
+  return n;
+}
+
+// Live data = one copy of every key that is still current and unexpired.
+function liveBytes() {
+  var seen = new Set();
+  for (var i = 0; i < S.ssts.length; i++) {
+    var e = S.ssts[i].e;
+    e.forEach(function (ts, k) { if (!rowExpired(ts)) seen.add(k); });
+  }
+  return seen.size;
+}
+
+// Not rendered any more — kept as an in-memory trace of what the strategy did,
+// which is what you want in the console when a run looks wrong.
+function log(tag, msg, cls) {
+  S.log.push({ t: S.tick, tag: tag, msg: msg, cls: cls || "info" });
+  if (S.log.length > 300) S.log.shift();
+}
+
+/* --------------------------------------------------------------- workload -- */
+function nextKey() {
+  if (opt.workload === "ts") return S.seqKey++;
+  if (opt.workload === "hot") {
+    // 80% of writes land on the hottest 20% of keys — the classic overwrite
+    // pattern that makes space amplification visible.
+    var hot = Math.max(1, Math.floor(KEYSPACE * 0.2));
+    return S.rng() < 0.8 ? Math.floor(S.rng() * hot) : Math.floor(S.rng() * KEYSPACE);
+  }
+  return Math.floor(S.rng() * KEYSPACE);
+}
+
+function doWrites() {
+  for (var i = 0; i < opt.rate; i++) {
+    var k = nextKey();
+    S.commitlog++;              // every row is appended; the memtable dedupes, the log doesn't
+    S.mem.set(k, S.tick);
+    S.writes++;
+  }
+}
+
+function maybeFlush() {
+  if (S.mem.size < opt.memThreshold) return;
+  var rows = Array.from(S.mem.entries()).sort(function (a, b) { return a[0] - b[0]; });
+  var meta = {};
+  if (opt.strategy === "ics") { meta.run = S.nextRun++; meta.frag = 0; }
+  if (opt.strategy === "twcs") meta.win = Math.floor(S.tick / opt.window);
+  var sst = mkSST(rows, meta);
+  sst.fresh = true;
+  S.ssts.push(sst);
+  S.flushes++;
+  S.flushedBytes += sst.size;
+  S.writtenBytes += sst.size;
+  S.mem = new Map();
+  S.commitlog = 0;                      // commitlog segment is released after flush
+  log("FLUSH", "memtable -> SSTable #" + sst.id + " (" + sst.size + " MB, " + sst.e.size + " rows)", "success");
+}
+
+/* ------------------------------------------------- STCS / ICS bucketing ---- */
+// Port of size_tiered_compaction_strategy::get_buckets. `items` are {size} —
+// individual SSTables for STCS, whole runs for ICS.
+function getBuckets(items) {
+  var bucketLow = 0.5, bucketHigh = 1.5;
+  // min_sstable_size defaults to 50 MB against ~256 MB+ real flushes; keep the
+  // same ratio at simulator scale instead of copying the absolute number.
+  var minSize = Math.max(1, Math.round(opt.memThreshold / 4));
+  var sorted = items.slice().sort(function (a, b) { return a.size - b.size; });
+  var buckets = [], avgs = [];
+  for (var i = 0; i < sorted.length; i++) {
+    var it = sorted[i], size = it.size;
+    if (buckets.length) {
+      var avg = avgs[avgs.length - 1];
+      if ((size > avg * bucketLow && size < avg * bucketHigh) || (size < minSize && avg < minSize)) {
+        var b = buckets[buckets.length - 1];
+        var newAvg = (b.length * avg + size) / (b.length + 1);
+        // Don't let the average drift so high that the bucket's smallest member
+        // would fall out of range.
+        if (size < minSize || b[0].size > newAvg * bucketLow) {
+          b.push(it);
+          avgs[avgs.length - 1] = newAvg;
+          continue;
+        }
+      }
+    }
+    buckets.push([it]);
+    avgs.push(size);
+  }
+  return buckets;
+}
+
+// most_interesting_bucket: prune to buckets that meet the threshold, then take
+// the one with the most members ("efficiency increases with number of files").
+function mostInteresting(buckets, minT) {
+  var pruned = buckets.filter(function (b) { return b.length >= minT; });
+  if (!pruned.length) return null;
+  return pruned.reduce(function (a, b) { return b.length > a.length ? b : a; });
+}
+
+/* ------------------------------------------------------------ strategies -- */
+function pickSTCS(pool) {
+  var buckets = getBuckets(pool);
+  var best = mostInteresting(buckets, opt.minThreshold);
+  var reason = "tier of " + opt.minThreshold + "+ similar-sized SSTables";
+  if (!best) {
+    // compaction_enforce_min_threshold defaults to false: any pair in a tier goes.
+    best = mostInteresting(buckets, 2);
+    reason = "pair in the same tier (min_threshold not enforced)";
+  }
+  if (!best) return null;
+  return { inputs: best.slice(0, MAX_THRESHOLD), reason: reason };
+}
+
+function runsOf(ssts) {
+  var by = new Map();
+  for (var i = 0; i < ssts.length; i++) {
+    var s = ssts[i];
+    if (!by.has(s.run)) by.set(s.run, { run: s.run, frags: [], size: 0 });
+    var r = by.get(s.run);
+    r.frags.push(s);
+    r.size += s.size;
+  }
+  var out = Array.from(by.values());
+  out.forEach(function (r) { r.frags.sort(function (a, b) { return a.minKey - b.minKey; }); });
+  return out;
+}
+
+function pickICS() {
+  var runs = runsOf(S.ssts);
+  var buckets = getBuckets(runs);
+  var best = mostInteresting(buckets, opt.minThreshold);
+  var reason = "tier of " + opt.minThreshold + "+ similar-sized runs";
+  if (!best) { best = mostInteresting(buckets, 2); reason = "pair of runs in the same tier"; }
+
+  if (best) {
+    var inputs = [];
+    best.slice(0, MAX_THRESHOLD).forEach(function (r) { inputs = inputs.concat(r.frags); });
+    return { inputs: inputs, reason: reason + " (" + best.length + " runs, " + inputs.length + " fragments)" };
+  }
+
+  // space_amplification_goal: no normal job to do, so consider a cross-tier
+  // compaction of the two largest tiers if SA has drifted above the goal.
+  if (opt.sag > 0 && buckets.length >= 2) {
+    var byAvg = buckets.slice().sort(function (a, b) {
+      var av = a.reduce(function (t, r) { return t + r.size; }, 0) / a.length;
+      var bv = b.reduce(function (t, r) { return t + r.size; }, 0) / b.length;
+      return bv - av;
+    });
+    var s0 = byAvg[0], s1 = byAvg[1];
+    var tot = function (b) { return b.reduce(function (t, r) { return t + r.size; }, 0); };
+    var s0b = tot(s0), s1b = tot(s1);
+    var sa = (s0b + s1b) / s0b;
+    if (sa > opt.sag) {
+      var ins = [];
+      s0.concat(s1).forEach(function (r) { ins = ins.concat(r.frags); });
+      return {
+        inputs: ins,
+        reason: "SAG cross-tier: SA " + sa.toFixed(2) + "x > goal " + opt.sag.toFixed(2) + "x",
+        sag: true
+      };
+    }
+  }
+  return null;
+}
+
+function levelsOf(ssts) {
+  var lv = [];
+  for (var i = 0; i < ssts.length; i++) {
+    var l = ssts[i].level;
+    while (lv.length <= l) lv.push([]);
+    lv[l].push(ssts[i]);
+  }
+  lv.forEach(function (a) { a.sort(function (x, y) { return x.minKey - y.minKey; }); });
+  return lv;
+}
+
+function maxBytesForLevel(l) {
+  return l === 0 ? 4 * opt.lcsSize : Math.pow(LCS_FANOUT, l) * opt.lcsSize;
+}
+
+function overlapping(list, minK, maxK) {
+  return (list || []).filter(function (s) { return s.maxKey >= minK && s.minKey <= maxK; });
+}
+
+function pickLCS() {
+  var lv = levelsOf(S.ssts);
+  var l0 = lv[0] || [];
+
+  // L0 is the only level whose SSTables overlap each other, so it is compacted
+  // wholesale into L1 as soon as it reaches the threshold.
+  if (l0.length >= 4) {
+    var batch = l0.slice(0, MAX_L0);
+    var minK = Math.min.apply(null, batch.map(function (s) { return s.minKey; }));
+    var maxK = Math.max.apply(null, batch.map(function (s) { return s.maxKey; }));
+    var ov = overlapping(lv[1], minK, maxK);
+    return {
+      inputs: batch.concat(ov),
+      level: 1,
+      reason: "L0 has " + l0.length + " overlapping SSTables (>= 4) -> merge with " + ov.length + " from L1"
+    };
+  }
+
+  // Otherwise compact the deepest level whose score (bytes / ideal bytes) > 1.
+  for (var i = lv.length - 1; i >= 1; i--) {
+    if (!lv[i] || !lv[i].length) continue;
+    var bytes = lv[i].reduce(function (t, s) { return t + s.size; }, 0);
+    var score = bytes / maxBytesForLevel(i);
+    if (score <= 1.001) continue;
+    // Round-robin through the level by key so every SSTable gets its turn.
+    var cursor = S.lastCompactedKey[i] === undefined ? -1 : S.lastCompactedKey[i];
+    var pickIdx = 0;
+    for (var j = 0; j < lv[i].length; j++) { if (lv[i][j].minKey > cursor) { pickIdx = j; break; } }
+    var chosen = lv[i][pickIdx];
+    S.lastCompactedKey[i] = chosen.maxKey;
+    if (pickIdx === lv[i].length - 1) S.lastCompactedKey[i] = -1;
+    var ov2 = overlapping(lv[i + 1], chosen.minKey, chosen.maxKey);
+    return {
+      inputs: [chosen].concat(ov2),
+      level: i + 1,
+      reason: "L" + i + " score " + score.toFixed(2) + " > 1 -> push 1 SSTable + " + ov2.length + " overlapping into L" + (i + 1)
+    };
+  }
+  return null;
+}
+
+function pickTWCS() {
+  var cw = Math.floor(S.tick / opt.window);
+  var by = new Map();
+  for (var i = 0; i < S.ssts.length; i++) {
+    var w = S.ssts[i].win === null ? cw : S.ssts[i].win;
+    if (!by.has(w)) by.set(w, []);
+    by.get(w).push(S.ssts[i]);
+  }
+  // Older windows are sealed down to exactly one SSTable each.
+  var wins = Array.from(by.keys()).filter(function (w) { return w < cw; }).sort(function (a, b) { return b - a; });
+  for (var j = 0; j < wins.length; j++) {
+    var list = by.get(wins[j]);
+    if (list.length > 1) {
+      return {
+        inputs: list.slice(0, MAX_THRESHOLD),
+        win: wins[j],
+        reason: "sealing window " + wins[j] + ": " + list.length + " SSTables -> 1"
+      };
+    }
+  }
+  // Inside the current window, plain size-tiered.
+  var cur = by.get(cw) || [];
+  var p = pickSTCS(cur);
+  if (p) { p.win = cw; p.reason = "current window " + cw + ": " + p.reason; }
+  return p;
+}
+
+/* --------------------------------------------------------- compaction job -- */
+function removeSST(s) {
+  var i = S.ssts.indexOf(s);
+  if (i >= 0) S.ssts.splice(i, 1);
+}
+
+function startJob(pick, kind) {
+  var inputs = pick.inputs;
+  var need = kind === "lcs" ? 1 : 2;
+  if (!inputs || inputs.length < need) return false;
+
+  // Merge: newest timestamp per key wins, expired rows are dropped.
+  var merged = new Map();
+  inputs.forEach(function (s) {
+    s.e.forEach(function (ts, k) {
+      var cur = merged.get(k);
+      if (cur === undefined || ts > cur) merged.set(k, ts);
+    });
+  });
+  if (opt.ttl > 0) merged.forEach(function (ts, k) { if (rowExpired(ts)) merged.delete(k); });
+
+  var rows = Array.from(merged.entries()).sort(function (a, b) { return a[0] - b[0]; });
+
+  // Only strategies that bound their output size can split it — that bound is
+  // exactly what lets ScyllaDB release input SSTables mid-compaction.
+  var fragSize = kind === "ics" ? opt.fragSize : (kind === "lcs" ? opt.lcsSize : rows.length || 1);
+  var chunks = [];
+  for (var i = 0; i < rows.length; i += fragSize) chunks.push(rows.slice(i, i + fragSize));
+
+  var totalIn = inputs.reduce(function (t, s) { return t + s.size; }, 0);
+  inputs.forEach(function (s) { s.compacting = true; });
+
+  S.job = {
+    kind: kind,
+    inputs: inputs.slice(),
+    all: inputs.slice(),
+    chunks: chunks,
+    outRows: rows.length,
+    emitted: 0,
+    readBytes: 0,
+    totalIn: totalIn,
+    partialBytes: 0,
+    run: kind === "ics" ? S.nextRun++ : 0,
+    level: pick.level || 0,
+    win: pick.win,
+    incremental: kind === "ics" || kind === "lcs",
+    reason: pick.reason
+  };
+  S.compactions++;
+  log("COMPACT", kind.toUpperCase() + " picks " + inputs.length + " files / " + totalIn + " MB — " + pick.reason,
+      pick.sag ? "warn" : "info");
+  return true;
+}
+
+function releaseInputs(j, boundaryKey) {
+  var keep = [];
+  var freed = 0;
+  j.inputs.forEach(function (s) {
+    if (s.maxKey <= boundaryKey) { freed += s.size; removeSST(s); }
+    else keep.push(s);
+  });
+  j.inputs = keep;
+  return freed;
+}
+
+function advanceJob() {
+  var j = S.job;
+  j.readBytes = Math.min(j.totalIn, j.readBytes + COMPACT_RATE);
+  var done = j.readBytes >= j.totalIn;
+  var frac = j.totalIn ? j.readBytes / j.totalIn : 1;
+  var outProgress = frac * j.outRows;
+
+  var cum = 0, i;
+  for (i = 0; i < j.emitted; i++) cum += j.chunks[i].length;
+
+  var freed = 0;
+  while (j.emitted < j.chunks.length && (done || cum + j.chunks[j.emitted].length <= outProgress)) {
+    var ch = j.chunks[j.emitted];
+    var meta = {};
+    if (j.kind === "ics") { meta.run = j.run; meta.frag = j.emitted; }
+    if (j.kind === "lcs") meta.level = j.level;
+    if (j.kind === "twcs") meta.win = j.win;
+    var sst = mkSST(ch, meta);
+    sst.fresh = true;
+    S.ssts.push(sst);
+    S.writtenBytes += sst.size;
+    j.emitted++;
+    cum += ch.length;
+    // The whole point of ICS: as soon as an output fragment is sealed, every
+    // input fragment that ends below its last key is dead weight and is deleted.
+    if (j.incremental && !done) freed += releaseInputs(j, ch[ch.length - 1][0]);
+  }
+  j.partialBytes = done ? 0 : Math.max(0, Math.round(outProgress - cum));
+
+  if (freed > 0) log("RELEASE", "incremental: " + freed + " MB of input freed mid-compaction", "success");
+
+  if (done) {
+    var reclaimed = j.totalIn - cum;
+    j.inputs.forEach(removeSST);
+    log("COMPACT", "done — " + j.totalIn + " MB in / " + cum + " MB out" +
+        (reclaimed > 0 ? " (" + reclaimed + " MB of duplicates & expired rows reclaimed)" : ""), "success");
+    S.job = null;
+  }
+}
+
+function dropExpired() {
+  if (opt.ttl <= 0) return;
+  var freed = 0, n = 0;
+  for (var i = S.ssts.length - 1; i >= 0; i--) {
+    var s = S.ssts[i];
+    if (s.compacting) continue;
+    if (sstExpired(s)) { freed += s.size; n++; S.ssts.splice(i, 1); }
+  }
+  if (n) log("EXPIRE", n + " fully-expired SSTable(s) dropped, " + freed + " MB reclaimed with no rewrite", "success");
+}
+
+/* ------------------------------------------------------------------- tick -- */
+function pickForStrategy() {
+  if (opt.strategy === "stcs") return pickSTCS(S.ssts);
+  if (opt.strategy === "ics") return pickICS();
+  if (opt.strategy === "lcs") return pickLCS();
+  return pickTWCS();
+}
+
+function tick() {
+  S.tick++;
+  doWrites();
+  maybeFlush();
+  dropExpired();
+  if (S.job) advanceJob();
+  else {
+    var p = pickForStrategy();
+    if (p) startJob(p, opt.strategy);
+  }
+  record();
+  render();
+}
+
+/* ---------------------------------------------------------------- metrics -- */
+function readAmp() {
+  if (opt.strategy === "lcs") {
+    var lv = levelsOf(S.ssts);
+    var n = (lv[0] || []).length;
+    for (var i = 1; i < lv.length; i++) if (lv[i] && lv[i].length) n++;
+    return n;
+  }
+  if (opt.strategy === "ics") return runsOf(S.ssts).length;
+  return S.ssts.length;
+}
+
+function record() {
+  var d = diskBytes(), l = liveBytes();
+  var sa = l > 0 ? d / l : 1;
+  var wa = S.flushedBytes > 0 ? S.writtenBytes / S.flushedBytes : 1;
+  if (sa > S.peakSA) S.peakSA = sa;
+  S.hist.push({ t: S.tick, sa: sa, wa: wa });
+  if (S.hist.length > HIST_MAX) S.hist.shift();
+}
+
+/* ----------------------------------------------------------------- layout -- */
+function layout() {
+  var rows = [];
+  var i;
+
+  if (opt.strategy === "stcs") {
+    var buckets = getBuckets(S.ssts);
+    buckets.forEach(function (b, idx) {
+      var tot = b.reduce(function (t, s) { return t + s.size; }, 0);
+      rows.push({
+        label: "TIER " + (idx + 1),
+        sub: "~" + Math.round(tot / b.length) + " MB &times; " + b.length,
+        items: b.map(function (s) { return { sst: s, depth: Math.min(5, idx) }; })
+      });
+    });
+
+  } else if (opt.strategy === "ics") {
+    var runs = runsOf(S.ssts);
+    var rb = getBuckets(runs);
+    var depth = new Map();
+    rb.forEach(function (b, idx) { b.forEach(function (r) { depth.set(r.run, Math.min(5, idx)); }); });
+    runs.sort(function (a, b) { return a.size - b.size || a.run - b.run; });
+    runs.forEach(function (r) {
+      rows.push({
+        label: "RUN #" + r.run,
+        sub: r.frags.length + (r.frags.length === 1 ? " fragment" : " fragments") + " &middot; " + r.size + " MB",
+        items: r.frags.map(function (s) { return { sst: s, depth: depth.get(r.run) || 0 }; })
+      });
+    });
+
+  } else if (opt.strategy === "lcs") {
+    var lv = levelsOf(S.ssts);
+    var top = Math.max(lv.length, 2);
+    for (i = 0; i < top; i++) {
+      var list = lv[i] || [];
+      var bytes = list.reduce(function (t, s) { return t + s.size; }, 0);
+      rows.push({
+        label: "L" + i,
+        sub: i === 0
+          ? list.length + " overlapping"
+          : bytes + " / " + maxBytesForLevel(i) + " MB",
+        keyed: i > 0,
+        items: list.map(function (s) { return { sst: s, depth: Math.min(5, i) }; })
+      });
+    }
+
+  } else { // twcs
+    var cw = Math.floor(S.tick / opt.window);
+    var by = new Map();
+    S.ssts.forEach(function (s) {
+      var w = s.win === null ? cw : s.win;
+      if (!by.has(w)) by.set(w, []);
+      by.get(w).push(s);
+    });
+    var wins = Array.from(by.keys()).sort(function (a, b) { return b - a; });
+    wins.forEach(function (w) {
+      var list = by.get(w);
+      var bytes = list.reduce(function (t, s) { return t + s.size; }, 0);
+      rows.push({
+        label: "WINDOW " + w + (w === cw ? " &middot; NOW" : ""),
+        sub: "t" + (w * opt.window) + "&ndash;" + ((w + 1) * opt.window - 1) + " &middot; " + bytes + " MB",
+        items: list.map(function (s) { return { sst: s, depth: Math.min(5, cw - w) }; })
+      });
+    });
+    if (!wins.length) rows.push({ label: "WINDOW " + cw, sub: "current", items: [] });
+  }
+
+  // Keep the stage a sane height: fold the tail into one summary lane.
+  var MAX_ROWS = 13;
+  if (rows.length > MAX_ROWS) {
+    var tail = rows.slice(MAX_ROWS - 1);
+    var folded = [];
+    tail.forEach(function (r) { folded = folded.concat(r.items); });
+    rows = rows.slice(0, MAX_ROWS - 1);
+    rows.push({
+      label: "+" + tail.length + " MORE",
+      sub: folded.length + " SSTables",
+      items: folded
+    });
+  }
+
+  if (S.job && S.job.partialBytes > 0) {
+    rows.push({
+      label: "WRITING",
+      sub: S.job.kind.toUpperCase() + " output",
+      items: [{ partial: true, size: S.job.partialBytes, depth: 3 }]
+    });
+  }
+
+  /* ---- positions ------------------------------------------------------- */
+  var keySpan = 1, keyMin = 0;
+  if (S.ssts.length) {
+    keyMin = Math.min.apply(null, S.ssts.map(function (s) { return s.minKey; }));
+    var keyMax = Math.max.apply(null, S.ssts.map(function (s) { return s.maxKey; }));
+    keySpan = Math.max(1, keyMax - keyMin + 1);
+  }
+  var maxRow = 1;
+  rows.forEach(function (r) {
+    if (r.keyed) return;
+    var t = r.items.reduce(function (a, it) { return a + (it.partial ? it.size : it.sst.size); }, 0);
+    if (t > maxRow) maxRow = t;
+  });
+  var scale = 100 / maxRow;
+
+  rows.forEach(function (r) {
+    var cursor = 0;
+    r.items.forEach(function (it) {
+      var s = it.sst;
+      if (it.partial) {
+        it.left = 0;
+        it.width = Math.max(1.2, it.size * scale - 0.4);
+        it.key = "partial";
+        it.text = it.size + " MB";
+        it.title = "Compaction output being written: " + it.size + " MB so far";
+        it.output = true;
+        return;
+      }
+      if (r.keyed) {
+        it.left = ((s.minKey - keyMin) / keySpan) * 100;
+        it.width = Math.max(0.8, ((s.maxKey - s.minKey + 1) / keySpan) * 100 - 0.3);
+      } else {
+        it.left = cursor * scale;
+        it.width = Math.max(0.8, s.size * scale - 0.4);
+        cursor += s.size;
+      }
+      it.key = "s" + s.id;
+      it.text = s.size >= 6 ? String(s.size) : "";
+      it.compacting = !!s.compacting;
+      it.expired = sstExpired(s);
+      it.fresh = !!s.fresh;
+      it.title =
+        "SSTable #" + s.id + "\n" + s.size + " MB / " + s.e.size + " rows" +
+        "\nkeys " + s.minKey + "–" + s.maxKey +
+        "\nwritten at t" + s.born +
+        (opt.strategy === "lcs" ? "\nlevel L" + s.level : "") +
+        (opt.strategy === "ics" ? "\nrun #" + s.run + ", fragment " + s.frag : "") +
+        (opt.strategy === "twcs" ? "\nwindow " + s.win : "") +
+        (it.expired ? "\nFULLY EXPIRED — droppable" : "");
+    });
+  });
+  return rows;
+}
+
+/* ----------------------------------------------------------------- render -- */
+var laneLayer, sstLayer, diskEl;
+var els = new Map();
+
+function render() {
+  var rows = layout();
+
+  /* lanes + labels (cheap, rebuilt every frame; they don't animate) */
+  var lanes = "";
+  rows.forEach(function (r, i) {
+    lanes += '<div class="row-label" style="top:' + (i * 41 + 1) + 'px">' + r.label + "<em>" + (r.sub || "") + "</em></div>";
+    lanes += '<div class="row-track' + (r.keyed ? " keyspace" : "") + '" style="top:' + (i * 41) + 'px"></div>';
+  });
+  laneLayer.innerHTML = lanes;
+  diskEl.style.height = Math.max(340, rows.length * 41 + 7) + "px";
+
+  /* SSTable blocks are persistent DOM nodes so CSS can tween them between rows */
+  var seen = new Set();
+  rows.forEach(function (r, i) {
+    r.items.forEach(function (it) {
+      seen.add(it.key);
+      var el = els.get(it.key);
+      if (!el) {
+        el = document.createElement("div");
+        sstLayer.appendChild(el);
+        els.set(it.key, el);
+      }
+      el.className = "sst" + (it.compacting ? " compacting" : "") + (it.output ? " output" : "") +
+                     (it.expired ? " expired" : "") + (it.fresh ? " fresh" : "");
+      el.dataset.depth = it.depth;
+      el.style.setProperty("--tier-c", "var(--tier-" + it.depth + ")");
+      el.style.top = (i * 41 + 3) + "px";
+      el.style.left = it.left.toFixed(3) + "%";
+      el.style.width = it.width.toFixed(3) + "%";
+      el.textContent = it.text;
+      el.title = it.title;
+    });
+  });
+  els.forEach(function (el, key) {
+    if (!seen.has(key)) { el.remove(); els.delete(key); }
+  });
+  S.ssts.forEach(function (s) { s.fresh = false; });
+
+  if (!rows.length || !S.ssts.length) {
+    laneLayer.innerHTML += '<div class="disk-empty">no SSTables yet &mdash; waiting for the first memtable flush</div>';
+  }
+
+  renderPipeline();
+  renderKPIs(rows);
+  renderChart();
+}
+
+function renderPipeline() {
+  $("cWrites").textContent = S.writes.toLocaleString();
+  $("cWorkload").textContent = { hot: "80/20 hot keys", uniform: "uniform random", ts: "new key each write" }[opt.workload];
+
+  var clogCap = opt.memThreshold * 2;
+  $("cClog").textContent = S.commitlog + " MB";
+  $("clogFill").style.width = Math.min(100, (S.commitlog / clogCap) * 100) + "%";
+
+  $("cMem").textContent = S.mem.size + " / " + opt.memThreshold + " MB";
+  var memPct = Math.min(100, (S.mem.size / opt.memThreshold) * 100);
+  $("memFill").style.width = memPct + "%";
+  $("memFill").className = "meter-fill" + (memPct > 80 ? " hot" : "");
+  $("memSub").textContent = S.commitlog > S.mem.size
+    ? (S.commitlog - S.mem.size) + " MB deduped in RAM"
+    : "in RAM, sorted by key";
+
+  $("cFlushes").textContent = S.flushes;
+  $("flushSub").textContent = S.flushedBytes + " MB flushed";
+
+  $("cCompactions").textContent = S.compactions;
+  if (S.job) {
+    var pct = S.job.totalIn ? (S.job.readBytes / S.job.totalIn) * 100 : 100;
+    $("compFill").style.width = pct + "%";
+    $("compSub").textContent = S.job.inputs.length + " files left, " + S.job.emitted + "/" + S.job.chunks.length + " out";
+    $("pnCompact").classList.add("pulse");
+  } else {
+    $("compFill").style.width = "0%";
+    $("compSub").textContent = "idle";
+    $("pnCompact").classList.remove("pulse");
+  }
+}
+
+function renderKPIs(rows) {
+  var d = diskBytes(), l = liveBytes();
+  var sa = l > 0 ? d / l : 1;
+  var wa = S.flushedBytes > 0 ? S.writtenBytes / S.flushedBytes : 1;
+  var ra = readAmp();
+
+  $("kSst").textContent = S.ssts.length;
+  var shape = { stcs: "tier", ics: "run", lcs: "level", twcs: "window" }[opt.strategy];
+  var groupCount = rows.filter(function (r) { return r.label !== "WRITING" && r.items.length; }).length;
+  $("kSstNote").textContent = groupCount + " " + shape + (groupCount === 1 ? "" : "s");
+  $("diskShape").textContent = "— " + groupCount + " " + shape + (groupCount === 1 ? "" : "s");
+
+  $("kDisk").innerHTML = d + "<small> MB</small>";
+  $("kDiskNote").textContent = S.writtenBytes + " MB written total";
+  $("kLive").innerHTML = l + "<small> MB</small>";
+
+  $("kSA").innerHTML = sa.toFixed(2) + "<small>&times;</small>";
+  $("kSANote").textContent = "peak " + S.peakSA.toFixed(2) + "×";
+  $("kpiSA").classList.toggle("hi", sa >= 1.6);
+
+  $("kWA").innerHTML = wa.toFixed(2) + "<small>&times;</small>";
+  $("kpiWA").classList.toggle("hi", wa >= 3);
+
+  $("kRA").textContent = ra;
+  $("kRANote").textContent = { stcs: "SSTables to check", ics: "runs to check", lcs: "L0 files + levels", twcs: "SSTables to check" }[opt.strategy];
+  $("kpiRA").classList.toggle("hi", ra >= 8);
+}
+
+/* ------------------------------------------------------------------ chart -- */
+var CW = 320, CH = 132, PL = 26, PR = 34, PT = 10, PB = 16;
+var chartHover = null;
+
+function chartScales() {
+  var h = S.hist;
+  var maxY = 2;
+  for (var i = 0; i < h.length; i++) maxY = Math.max(maxY, h[i].sa, h[i].wa);
+  maxY = Math.ceil(maxY * 10) / 10;
+  var x = function (i) { return PL + (h.length < 2 ? 0 : (i / (h.length - 1)) * (CW - PL - PR)); };
+  var y = function (v) { return PT + (1 - (v - 1) / (maxY - 1)) * (CH - PT - PB); };
+  return { x: x, y: y, maxY: maxY };
+}
+
+function renderChart() {
+  var svg = $("chart"), h = S.hist;
+  if (h.length < 2) { svg.innerHTML = ""; return; }
+  var sc = chartScales();
+  var parts = [];
+
+  [1, (1 + sc.maxY) / 2, sc.maxY].forEach(function (v) {
+    parts.push('<line class="grid" x1="' + PL + '" x2="' + (CW - PR) + '" y1="' + sc.y(v).toFixed(1) + '" y2="' + sc.y(v).toFixed(1) + '"/>');
+    parts.push('<text class="axis-text" x="' + (PL - 4) + '" y="' + (sc.y(v) + 3).toFixed(1) + '" text-anchor="end">' + v.toFixed(1) + "</text>");
+  });
+  parts.push('<text class="axis-text" x="' + PL + '" y="' + (CH - 3) + '">t' + h[0].t + "</text>");
+  parts.push('<text class="axis-text" x="' + (CW - PR) + '" y="' + (CH - 3) + '" text-anchor="end">t' + h[h.length - 1].t + "</text>");
+
+  ["sa", "wa"].forEach(function (k) {
+    var pts = h.map(function (p, i) { return sc.x(i).toFixed(1) + "," + sc.y(p[k]).toFixed(1); }).join(" ");
+    parts.push('<polyline class="line ' + (k === "sa" ? "space" : "write") + '" points="' + pts + '"/>');
+  });
+
+  // Direct labels at the live end — identity is never colour-alone.
+  var last = h[h.length - 1];
+  var ys = sc.y(last.sa), yw = sc.y(last.wa);
+  if (Math.abs(ys - yw) < 9) { if (ys < yw) { ys -= 4; yw += 5; } else { ys += 5; yw -= 4; } }
+  parts.push('<text class="dlabel space" x="' + (CW - PR + 4) + '" y="' + (ys + 3).toFixed(1) + '">' + last.sa.toFixed(2) + "×</text>");
+  parts.push('<text class="dlabel write" x="' + (CW - PR + 4) + '" y="' + (yw + 3).toFixed(1) + '">' + last.wa.toFixed(2) + "×</text>");
+
+  if (chartHover !== null && chartHover >= 0 && chartHover < h.length) {
+    var p = h[chartHover], hx = sc.x(chartHover);
+    parts.push('<line class="crosshair" x1="' + hx.toFixed(1) + '" x2="' + hx.toFixed(1) + '" y1="' + PT + '" y2="' + (CH - PB) + '"/>');
+    parts.push('<circle class="hover-dot" cx="' + hx.toFixed(1) + '" cy="' + sc.y(p.sa).toFixed(1) + '" r="3.5" fill="var(--series-space)"/>');
+    parts.push('<circle class="hover-dot" cx="' + hx.toFixed(1) + '" cy="' + sc.y(p.wa).toFixed(1) + '" r="3.5" fill="var(--series-write)"/>');
+  }
+  svg.innerHTML = parts.join("");
+}
+
+function bindChartHover() {
+  var svg = $("chart"), tip = $("chartTip");
+  svg.addEventListener("mousemove", function (ev) {
+    var h = S.hist;
+    if (h.length < 2) return;
+    var r = svg.getBoundingClientRect();
+    var vx = ((ev.clientX - r.left) / r.width) * CW;
+    var f = (vx - PL) / (CW - PL - PR);
+    var i = Math.round(f * (h.length - 1));
+    chartHover = Math.max(0, Math.min(h.length - 1, i));
+    var p = h[chartHover];
+    tip.hidden = false;
+    tip.innerHTML = "t" + p.t + "<br><b style='color:var(--series-space)'>&#9679;</b> space " + p.sa.toFixed(2) +
+                    "&times;<br><b style='color:var(--series-write)'>&#9679;</b> write " + p.wa.toFixed(2) + "&times;";
+    var sc = chartScales();
+    var px = (sc.x(chartHover) / CW) * r.width;
+    tip.style.left = Math.min(r.width - tip.offsetWidth - 4, Math.max(0, px + 10)) + "px";
+    tip.style.top = "6px";
+    renderChart();
+  });
+  svg.addEventListener("mouseleave", function () {
+    chartHover = null;
+    tip.hidden = true;
+    renderChart();
+  });
+}
+
+/* -------------------------------------------------------------- explainer -- */
+var EXPLAIN = {
+  stcs: {
+    name: "Size-Tiered Compaction Strategy",
+    v: { Write: 2, Space: 5, Read: 4 }
+  },
+  lcs: {
+    name: "Leveled Compaction Strategy",
+    v: { Write: 5, Space: 2, Read: 1 }
+  },
+  ics: {
+    name: "Incremental Compaction Strategy",
+    v: { Write: 2, Space: 2, Read: 4 }
+  },
+  twcs: {
+    name: "Time-Window Compaction Strategy",
+    v: { Write: 1, Space: 3, Read: 3 }
+  }
+};
+
+function renderExplain() {
+  var e = EXPLAIN[opt.strategy];
+  $("expName").textContent = e.name;
+  var html = "";
+  Object.keys(e.v).forEach(function (k) {
+    var pct = (e.v[k] / 5) * 100;
+    var word = ["", "very low", "low", "medium", "high", "very high"][e.v[k]];
+    html += '<div><span class="vl">' + k + " amp</span><span class=\"bar\"><i style=\"width:" + pct + '%"></i></span><span class="vv">' + word + "</span></div>";
+  });
+  $("expVerdict").innerHTML = html;
+}
+
+/* --------------------------------------------------------------- controls -- */
+function syncOptGroups() {
+  document.querySelectorAll(".opt-group").forEach(function (g) {
+    g.hidden = g.dataset.for.split(" ").indexOf(opt.strategy) === -1;
+  });
+}
+
+function reset(quiet) {
+  S = newState();
+  els.forEach(function (el) { el.remove(); });
+  els.clear();
+  chartHover = null;
+  $("chartTip").hidden = true;
+  if (!quiet) log("RESET", EXPLAIN[opt.strategy].name + " · " +
+    { hot: "overwrite-heavy", uniform: "uniform", ts: "time-series" }[opt.workload] +
+    " workload · flush at " + opt.memThreshold + " MB", "info");
+  renderExplain();
+  render();
+}
+
+function bind(id, key, fmt, needsReset) {
+  var el = $(id);
+  var valEl = $(id.replace(/Range$|Select$/, "Val"));
+  function apply() {
+    var v = el.type === "range" ? Number(el.value) : (isNaN(Number(el.value)) ? el.value : Number(el.value));
+    opt[key] = v;
+    if (valEl) valEl.textContent = fmt ? fmt(v) : v;
+    if (needsReset) reset(); else render();
+  }
+  el.addEventListener("input", apply);
+  el.addEventListener("change", apply);
+  if (valEl) valEl.textContent = fmt ? fmt(opt[key]) : opt[key];
+}
+
+function loop() {
+  if (timer) clearTimeout(timer);
+  timer = setTimeout(function () {
+    if (running) tick();
+    loop();
+  }, Math.round(760 / opt.speed));
+}
+
+function init() {
+  diskEl = $("disk");
+  diskEl.innerHTML = '<div class="lane-layer" id="laneLayer"></div><div class="sst-layer" id="sstLayer"></div>';
+  laneLayer = $("laneLayer");
+  sstLayer = $("sstLayer");
+
+  $("strategySelect").addEventListener("change", function () {
+    opt.strategy = this.value;
+    syncOptGroups();
+    reset();
+  });
+  $("workloadSelect").addEventListener("change", function () {
+    opt.workload = this.value;
+    // A time-series workload without a TTL just grows forever — which is exactly
+    // the shape TWCS is built for, so switch the TTL on with it.
+    if (opt.workload === "ts" && opt.ttl === 0) opt.ttl = 100;
+    reset();
+  });
+
+  bind("minThRange", "minThreshold");
+  bind("fragRange", "fragSize");
+  bind("sagSelect", "sag");
+  bind("lcsSizeRange", "lcsSize");
+  bind("windowRange", "window", function (v) { return v + " ticks"; }, true);
+  bind("speedRange", "speed", function (v) { return v + "×"; });
+
+  $("btnPlay").addEventListener("click", function () {
+    running = !running;
+    this.textContent = running ? "Pause" : "Play";
+    this.classList.toggle("btn--primary", running);
+  });
+  $("btnStep").addEventListener("click", function () {
+    running = false;
+    $("btnPlay").textContent = "Play";
+    $("btnPlay").classList.remove("btn--primary");
+    tick();
+  });
+  $("btnReset").addEventListener("click", function () { reset(); });
+
+  bindChartHover();
+  syncOptGroups();
+  reset();
+  loop();
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+
+})();
+</script>
+</body>
+</html>
