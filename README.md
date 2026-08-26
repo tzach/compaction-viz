@@ -57,7 +57,9 @@ sub-properties it mirrors.
 
 ## Running it
 
-Static, dependency-free, no build step:
+**[Open the live simulator →](https://tzach.github.io/compaction-viz/)**
+
+Or run it locally — static, dependency-free, no build step:
 
 ```bash
 git clone https://github.com/tzach/compaction-viz.git
