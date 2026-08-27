@@ -220,7 +220,7 @@
   .meter.commitlog .meter-fill { background: var(--color-primary-400); }
 
   /* ---------- disk / sstable field ---------- */
-  .disk { position: relative; margin-top: 16px; min-height: 340px; --lane-x: 178px; }
+  .disk { position: relative; margin-top: 16px; min-height: 296px; --lane-x: 178px; }
   .lane-layer { position: absolute; inset: 0; }
   /* Blocks live in their own layer, offset past the labels, so a block's left/width
      are plain percentages of the track and it can be tweened between rows without
@@ -308,7 +308,7 @@
     background: var(--surface-2);
     border: var(--border-w) solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 11px 13px;
+    padding: 9px 12px;
   }
   .kpi .k-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; }
   .kpi .k-value { font-family: var(--font-mono); font-size: 23px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-emphasis, var(--text)); line-height: 1.25; }
@@ -321,7 +321,7 @@
   .chart-legend { display: flex; gap: 14px; font-size: 12px; font-family: var(--font-mono); color: var(--text-dim); }
   .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .chart-legend i { width: 15px; height: 2px; display: block; border-radius: 1px; }
-  #chart { width: 100%; height: 190px; display: block; margin-top: 12px; overflow: visible; }
+  #chart { width: 100%; height: 168px; display: block; margin-top: 10px; overflow: visible; }
   #chart .grid { stroke: var(--border); stroke-width: 1; }
   #chart .axis-text { fill: var(--text-faint); font-family: var(--font-mono); font-size: 9px; }
   #chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
@@ -349,15 +349,73 @@
   .chart-tip b { font-weight: 700; }
   .chart-wrap { position: relative; }
 
-  /* ---------- explainer ---------- */
-  .explain p { margin: 8px 0 0; font-size: 12.5px; color: var(--text-dim); line-height: 1.55; }
-  .explain .verdict { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
-  .explain .verdict div { display: flex; align-items: center; gap: 10px; font-size: 12.5px; font-family: var(--font-mono); color: var(--text-dim); }
-  .explain .verdict .vl { width: 92px; flex: none; color: var(--text-faint); }
-  .explain .verdict .bar { flex: 1; height: 8px; background: var(--bg-page); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
-  .explain .verdict .bar i { display: block; height: 100%; background: var(--accent); }
-  .explain .verdict .vv { width: 56px; flex: none; text-align: right; }
-  .explain code { font-family: var(--font-mono); font-size: 11.5px; background: var(--bg-code, var(--surface-2)); padding: 0 4px; border-radius: 3px; }
+  /* ---------- strategy comparison table ---------- */
+  .amp-table {
+    width: 100%;
+    margin: 14px 0 0;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  .amp-table th, .amp-table td {
+    padding: 6px 8px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .amp-table thead th {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+    border-bottom: var(--border-w) solid var(--border-strong, var(--border));
+  }
+  .amp-table tbody th {
+    text-align: left;
+    font-weight: 400;
+    color: var(--text-faint);
+  }
+  .amp-table tr:last-child th, .amp-table tr:last-child td { border-bottom: none; }
+  /* The active strategy's column is the one the tiles above are measuring. */
+  .amp-table td.active {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--text-emphasis, var(--text));
+    font-weight: 700;
+  }
+  .amp-table thead th.active {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--accent);
+  }
+  .amp-foot { font-size: 11.5px; color: var(--text-faint); margin-top: 10px; font-family: var(--font-mono); }
+
+  /* ---------- inline advice bubble ---------- */
+  .notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--warn-bg);
+    border: var(--border-w) solid var(--warn);
+    border-radius: var(--radius-lg);
+    padding: 9px 14px;
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.45;
+  }
+  .notice[hidden] { display: none; }
+  .notice .n-icon { flex: none; font-weight: 700; color: var(--warn); font-family: var(--font-mono); }
+  .notice .n-body { flex: 1; }
+  .notice .n-body b { font-weight: 700; }
+  .notice button {
+    flex: none;
+    background: none;
+    border: 0;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+  }
+  .notice button:hover { color: var(--text); }
 
   .page-footer { text-align: center; font-size: 12.5px; color: var(--text-faint); padding-top: 4px; }
   .page-footer a { color: var(--accent); text-decoration: none; }
@@ -393,9 +451,8 @@
     <div class="ctrl wide">
       <label for="strategySelect">Compaction strategy</label>
       <select id="strategySelect" class="form-input form-input--compact">
-        <option value="stcs" selected>STCS — Size-Tiered</option>
         <option value="lcs">LCS — Leveled</option>
-        <option value="ics">ICS — Incremental</option>
+        <option value="ics" selected>ICS — Incremental</option>
         <option value="twcs">TWCS — Time-Window</option>
       </select>
     </div>
@@ -412,7 +469,7 @@
     <div class="divider"></div>
 
     <!-- strategy sub-properties: only the ones that exist for the selected class -->
-    <div class="ctrl opt-group" data-for="stcs ics twcs">
+    <div class="ctrl opt-group" data-for="ics twcs">
       <label for="minThRange">min_threshold <span class="val" id="minThVal">4</span></label>
       <input type="range" id="minThRange" min="2" max="8" value="4" step="1" />
     </div>
@@ -448,6 +505,12 @@
       <label for="speedRange">Speed <span class="val" id="speedVal">1&times;</span></label>
       <input type="range" id="speedRange" min="1" max="8" value="1" step="1" />
     </div>
+  </div>
+
+  <div class="notice" id="twcsNotice" hidden>
+    <span class="n-icon">&#9888;</span>
+    <span class="n-body" id="twcsNoticeBody"></span>
+    <button type="button" id="twcsNoticeClose" aria-label="Dismiss">&times;</button>
   </div>
 
   <!-- ---------------- main ---------------- -->
@@ -527,9 +590,9 @@
       </div>
 
       <div class="panel explain" style="flex:1;">
-        <h2 id="expName">Strategy</h2>
-        <div class="verdict" id="expVerdict"></div>
-        <div style="font-size:11.5px;color:var(--text-faint);margin-top:12px;font-family:var(--font-mono)">typical at production scale &mdash; the tiles above measure <em>this</em> run</div>
+        <h2>Strategy comparison</h2>
+        <table class="amp-table" id="ampTable"></table>
+        <div class="amp-foot">typical at production scale &mdash; the tiles above measure <em>this</em> run</div>
       </div>
     </div>
   </div>
@@ -574,7 +637,7 @@ var $ = function (id) { return document.getElementById(id); };
 
 /* ---------------------------------------------------------------- options -- */
 var opt = {
-  strategy: "stcs",
+  strategy: "ics",
   workload: "hot",
   rate: 3,
   memThreshold: 12,
@@ -1025,7 +1088,6 @@ function dropExpired() {
 
 /* ------------------------------------------------------------------- tick -- */
 function pickForStrategy() {
-  if (opt.strategy === "stcs") return pickSTCS(S.ssts);
   if (opt.strategy === "ics") return pickICS();
   if (opt.strategy === "lcs") return pickLCS();
   return pickTWCS();
@@ -1071,18 +1133,7 @@ function layout() {
   var rows = [];
   var i;
 
-  if (opt.strategy === "stcs") {
-    var buckets = getBuckets(S.ssts);
-    buckets.forEach(function (b, idx) {
-      var tot = b.reduce(function (t, s) { return t + s.size; }, 0);
-      rows.push({
-        label: "TIER " + (idx + 1),
-        sub: "~" + Math.round(tot / b.length) + " MB &times; " + b.length,
-        items: b.map(function (s) { return { sst: s, depth: Math.min(5, idx) }; })
-      });
-    });
-
-  } else if (opt.strategy === "ics") {
+  if (opt.strategy === "ics") {
     var runs = runsOf(S.ssts);
     var rb = getBuckets(runs);
     var depth = new Map();
@@ -1223,7 +1274,7 @@ function render() {
     lanes += '<div class="row-track' + (r.keyed ? " keyspace" : "") + '" style="top:' + (i * 41) + 'px"></div>';
   });
   laneLayer.innerHTML = lanes;
-  diskEl.style.height = Math.max(340, rows.length * 41 + 7) + "px";
+  diskEl.style.height = Math.max(296, rows.length * 41 + 7) + "px";
 
   /* SSTable blocks are persistent DOM nodes so CSS can tween them between rows */
   var seen = new Set();
@@ -1300,7 +1351,7 @@ function renderKPIs(rows) {
   var ra = readAmp();
 
   $("kSst").textContent = S.ssts.length;
-  var shape = { stcs: "tier", ics: "run", lcs: "level", twcs: "window" }[opt.strategy];
+  var shape = { ics: "run", lcs: "level", twcs: "window" }[opt.strategy];
   var groupCount = rows.filter(function (r) { return r.label !== "WRITING" && r.items.length; }).length;
   $("kSstNote").textContent = groupCount + " " + shape + (groupCount === 1 ? "" : "s");
   $("diskShape").textContent = "— " + groupCount + " " + shape + (groupCount === 1 ? "" : "s");
@@ -1317,7 +1368,7 @@ function renderKPIs(rows) {
   $("kpiWA").classList.toggle("hi", wa >= 3);
 
   $("kRA").textContent = ra;
-  $("kRANote").textContent = { stcs: "SSTables to check", ics: "runs to check", lcs: "L0 files + levels", twcs: "SSTables to check" }[opt.strategy];
+  $("kRANote").textContent = { ics: "runs to check", lcs: "L0 files + levels", twcs: "SSTables to check" }[opt.strategy];
   $("kpiRA").classList.toggle("hi", ra >= 8);
 }
 
@@ -1398,10 +1449,6 @@ function bindChartHover() {
 
 /* -------------------------------------------------------------- explainer -- */
 var EXPLAIN = {
-  stcs: {
-    name: "Size-Tiered Compaction Strategy",
-    v: { Write: 2, Space: 5, Read: 4 }
-  },
   lcs: {
     name: "Leveled Compaction Strategy",
     v: { Write: 5, Space: 2, Read: 1 }
@@ -1416,16 +1463,44 @@ var EXPLAIN = {
   }
 };
 
+var AMP_WORD = ["", "very low", "low", "medium", "high", "very high"];
+var STRATS = ["lcs", "ics", "twcs"];
+
 function renderExplain() {
-  var e = EXPLAIN[opt.strategy];
-  $("expName").textContent = e.name;
-  var html = "";
-  Object.keys(e.v).forEach(function (k) {
-    var pct = (e.v[k] / 5) * 100;
-    var word = ["", "very low", "low", "medium", "high", "very high"][e.v[k]];
-    html += '<div><span class="vl">' + k + " amp</span><span class=\"bar\"><i style=\"width:" + pct + '%"></i></span><span class="vv">' + word + "</span></div>";
-  });
-  $("expVerdict").innerHTML = html;
+  var head = '<thead><tr><th></th>' + STRATS.map(function (k) {
+    return '<th class="' + (k === opt.strategy ? "active" : "") + '">' + k.toUpperCase() + "</th>";
+  }).join("") + "</tr></thead>";
+
+  var body = ["Write", "Space", "Read"].map(function (amp) {
+    return "<tr><th>" + amp + " amp</th>" + STRATS.map(function (k) {
+      return '<td class="' + (k === opt.strategy ? "active" : "") + '">' + AMP_WORD[EXPLAIN[k].v[amp]] + "</td>";
+    }).join("") + "</tr>";
+  }).join("");
+
+  $("ampTable").innerHTML = head + "<tbody>" + body + "</tbody>";
+}
+
+/* ------------------------------------------------------------ TWCS advice -- */
+// Dismissal is remembered for the recommendation, but a workload that actively
+// breaks TWCS re-opens the bubble — that one is a warning, not a tip.
+var noticeDismissed = false;
+
+function showTwcsNotice() {
+  var el = $("twcsNotice"), body = $("twcsNoticeBody");
+  if (opt.strategy !== "twcs") { el.hidden = true; return; }
+
+  if (opt.workload !== "ts") {
+    body.innerHTML = "<b>TWCS outside its design.</b> It seals each window permanently, so overwrites that " +
+      "straddle windows are never merged away and space amplification climbs without bound. " +
+      "Switch back to <b>Time series</b>.";
+    el.hidden = false;
+    return;
+  }
+
+  body.innerHTML = "<b>Workload switched to Time series.</b> TWCS is only recommended for append-only " +
+    "time-series data with a single TTL — whole SSTables then expire together and are dropped with no merge " +
+    "at all. Try an overwrite-heavy workload to watch that break.";
+  el.hidden = noticeDismissed;
 }
 
 /* --------------------------------------------------------------- controls -- */
@@ -1478,7 +1553,15 @@ function init() {
 
   $("strategySelect").addEventListener("change", function () {
     opt.strategy = this.value;
+    // TWCS buckets by write time and seals a window once it closes, so it only
+    // behaves sensibly on append-only data. Move the workload with it.
+    if (opt.strategy === "twcs" && opt.workload !== "ts") {
+      opt.workload = "ts";
+      $("workloadSelect").value = "ts";
+      if (opt.ttl === 0) opt.ttl = 100;
+    }
     syncOptGroups();
+    showTwcsNotice();
     reset();
   });
   $("workloadSelect").addEventListener("change", function () {
@@ -1486,7 +1569,12 @@ function init() {
     // A time-series workload without a TTL just grows forever — which is exactly
     // the shape TWCS is built for, so switch the TTL on with it.
     if (opt.workload === "ts" && opt.ttl === 0) opt.ttl = 100;
+    showTwcsNotice();
     reset();
+  });
+  $("twcsNoticeClose").addEventListener("click", function () {
+    $("twcsNotice").hidden = true;
+    noticeDismissed = true;
   });
 
   bind("minThRange", "minThreshold");
@@ -1511,6 +1599,7 @@ function init() {
 
   bindChartHover();
   syncOptGroups();
+  showTwcsNotice();
   reset();
   loop();
 }

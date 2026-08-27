@@ -18,10 +18,13 @@ ScyllaDB, Inc.
 
 | Class | What the simulator models |
 |---|---|
-| **STCS** — Size-Tiered | `bucket_low`/`bucket_high` bucketing around each tier's running average; a tier of `min_threshold` files merges into one big file, holding inputs *and* output on disk at once |
 | **LCS** — Leveled | fixed-size SSTables, fan-out of 10, non-overlapping key ranges from L1 down, L0 flushed wholesale into L1, per-level score picking the next job |
 | **ICS** — Incremental | the same size-tiered bucketing, but over SSTable **runs** of key-disjoint fragments; output fragments are sealed one at a time and consumed inputs are deleted mid-compaction, plus the `space_amplification_goal` cross-tier job |
 | **TWCS** — Time-Window | bucketing by the window of an SSTable's newest write, size-tiered inside the current window, older windows sealed to one file, fully-expired SSTables dropped without a rewrite |
+
+Size-tiered compaction itself isn't offered as a standalone choice — it survives inside ICS (which
+tiers *runs* rather than files), inside LCS's L0, and inside TWCS's current window, which is where
+you can watch it.
 
 The selection rules are ports of `scylladb/compaction/*.cc` — `size_tiered_compaction_strategy::get_buckets`
 and `most_interesting_bucket`, `incremental_compaction_strategy` (including the SAG job),
@@ -43,13 +46,13 @@ sub-properties it mirrors.
 
 ## Things worth trying
 
-- **STCS vs ICS, overwrite-heavy.** Identical write amplification and identical tiering — but watch
-  *peak* space amplification — ICS frees input fragments mid-compaction, so its output block never
-  sits alongside a full second copy of the tier.
+- **ICS, overwrite-heavy.** Watch *peak* space amplification: ICS frees input fragments
+  mid-compaction, so its output never sits alongside a full second copy of the tier.
 - **Time-series workload + TWCS.** Whole SSTables expire together and are dropped with no merge at
   all; write amplification stays near the floor.
-- **Time-series workload + TWCS, then switch to overwrite-heavy.** Windows never stop opening and
-  space amplification runs away — the reason TWCS is only for append-only data.
+- **TWCS, then switch to overwrite-heavy.** Selecting TWCS moves the workload to time series for you;
+  switch it back to overwrite-heavy and windows never stop opening, so space amplification runs away.
+  That's the reason TWCS is only for append-only data.
 - **LCS on any workload.** Space amplification pinned near 1.0×, read amplification of a few files,
   paid for with the highest write amplification of the four.
 - **ICS with `space_amplification_goal` = 1.25.** An extra cross-tier compaction of the two largest
