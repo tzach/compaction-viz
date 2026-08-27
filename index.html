@@ -1522,8 +1522,7 @@ function showTwcsNotice() {
   }
 
   body.innerHTML = "<b>Workload switched to Time series.</b> TWCS is only recommended for append-only " +
-    "time-series data with a single TTL — whole SSTables then expire together and are dropped with no merge " +
-    "at all. Try an overwrite-heavy workload to watch that break.";
+    "time-series data with a single TTL.";
   el.hidden = noticeDismissed;
 }
 
