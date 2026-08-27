@@ -38,11 +38,11 @@ One row of simulated data is one "MB", so every size on screen shares a unit wit
 sub-properties it mirrors.
 
 - **Space amplification** — bytes on disk ÷ bytes of live, unexpired data. Counts the partially
-  written output of an in-flight compaction, which is exactly where STCS spikes and ICS doesn't.
+  written output of an in-flight compaction, which is exactly where a single-file merge spikes and
+  ICS doesn't.
 - **Write amplification** — total bytes ever written to disk ÷ bytes flushed from the memtable.
-- **Read amplification** — files a single-key lookup may have to touch: SSTables for STCS/TWCS,
-  runs for ICS, L0 files plus one per level for LCS. Bloom filters are not modelled, so this is
-  an upper bound.
+- **Read amplification** — files a single-key lookup may have to touch: runs for ICS, L0 files plus
+  one per level for LCS, SSTables for TWCS. Bloom filters are not modelled, so this is an upper bound.
 
 ## Things worth trying
 
