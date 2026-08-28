@@ -55,11 +55,14 @@
     --tier-5: var(--color-primary-700);
     --tier-ink: var(--color-gray-900);
 
-    /* Two-series categorical pair for the amplification chart. primary-500 +
-       warning-500 — validated for CVD separation against the light surface
-       (the DS's own chart-1/chart-2 pair is two blues and fails deutan). */
+    /* Three-series categorical set for the amplification charts. primary-500 +
+       warning-500 + magenta-500 — validated for CVD separation against the light
+       surface (the DS's own chart-1/chart-2 pair is two blues and fails deutan).
+       Read amp is a count, not a ratio, so it gets its own plot band below the
+       ratio band rather than a second y-axis on the same one. */
     --series-space: var(--color-primary-500);
     --series-write: var(--color-warning-500);
+    --series-read: var(--color-magenta-500);
   }
   [data-theme="dark"] {
     --tier-0: var(--color-primary-800);
@@ -73,6 +76,7 @@
        band, warning-600 is inside it. */
     --series-space: var(--color-primary-500);
     --series-write: var(--color-warning-600);
+    --series-read: var(--color-magenta-500);
   }
   .sst { --tier-ink: var(--color-gray-900); }
   .sst[data-depth="4"], .sst[data-depth="5"] { --tier-ink: var(--color-gray-50); }
@@ -321,15 +325,26 @@
   .chart-legend { display: flex; gap: 14px; font-size: 12px; font-family: var(--font-mono); color: var(--text-dim); }
   .chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
   .chart-legend i { width: 15px; height: 2px; display: block; border-radius: 1px; }
-  #chart { width: 100%; height: 164px; display: block; margin-top: 10px; overflow: visible; }
+  #chart { width: 100%; height: 244px; display: block; margin-top: 10px; overflow: visible; }
   #chart .grid { stroke: var(--border); stroke-width: 1; }
   #chart .axis-text { fill: var(--text-faint); font-family: var(--font-mono); font-size: 9px; }
   #chart .line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   #chart .line.space { stroke: var(--series-space); }
   #chart .line.write { stroke: var(--series-write); }
+  #chart .line.read { stroke: var(--series-read); }
   #chart .dlabel { font-family: var(--font-mono); font-size: 9.5px; font-weight: 700; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
   #chart .dlabel.space { fill: var(--series-space); }
   #chart .dlabel.write { fill: var(--series-write); }
+  #chart .dlabel.read { fill: var(--series-read); }
+  /* Caption sits in the gutter above each band — the two bands carry different
+     units, so each says which one it is. */
+  #chart .band-cap {
+    fill: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
   #chart .crosshair { stroke: var(--text-faint); stroke-width: 1; stroke-dasharray: 3 3; }
   #chart .hover-dot { stroke: var(--surface); stroke-width: 2; }
   .chart-tip {
@@ -388,8 +403,8 @@
   }
   .amp-foot { font-size: 11.5px; color: var(--text-faint); margin-top: 10px; font-family: var(--font-mono); }
 
-  /* ---------- advice bubble, anchored to the workload dropdown ---------- */
-  #workloadCtrl { position: relative; }
+  /* ---------- advice bubbles, anchored to the control they talk about ------ */
+  #workloadCtrl, #sagCtrl { position: relative; }
   .notice {
     position: absolute;
     top: calc(100% + 10px);
@@ -426,6 +441,18 @@
     border-top: var(--border-w) solid var(--warn);
     transform: rotate(45deg);
   }
+  /* The warning skin is the default; --info is the same bubble in accent ink,
+     for a tip that explains a knob rather than flagging a broken setup. */
+  .notice--info {
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    border-color: var(--accent);
+  }
+  .notice--info::before {
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    border-left-color: var(--accent);
+    border-top-color: var(--accent);
+  }
+  .notice--info .n-icon { color: var(--accent); font-style: italic; }
   .notice[hidden] { display: none; }
   .notice .n-icon { flex: none; font-weight: 700; color: var(--warn); font-family: var(--font-mono); }
   .notice .n-body { flex: 1; }
@@ -505,11 +532,11 @@
     </div>
 
     <div class="ctrl opt-group" data-for="ics">
-      <label for="fragRange">sstable_size_in_mb <span class="val" id="fragVal">12</span></label>
-      <input type="range" id="fragRange" min="4" max="48" value="12" step="4" />
+      <label for="fragRange">sstable_size_in_mb <span class="val" id="fragVal">1000</span></label>
+      <input type="range" id="fragRange" min="200" max="2000" value="1000" step="100" />
     </div>
 
-    <div class="ctrl wide opt-group" data-for="ics">
+    <div class="ctrl wide opt-group" id="sagCtrl" data-for="ics">
       <label for="sagSelect">space_amplification_goal</label>
       <select id="sagSelect" class="form-input form-input--compact">
         <option value="0" selected>null (off)</option>
@@ -517,16 +544,30 @@
         <option value="1.5">1.5</option>
         <option value="2">2.0</option>
       </select>
+      <div class="notice notice--info" id="sagNotice" role="status" hidden>
+        <span class="n-icon">i</span>
+        <span class="n-body" id="sagNoticeBody"></span>
+        <button type="button" id="sagNoticeClose" aria-label="Dismiss">&times;</button>
+      </div>
     </div>
 
     <div class="ctrl opt-group" data-for="lcs">
-      <label for="lcsSizeRange">sstable_size_in_mb <span class="val" id="lcsSizeVal">12</span></label>
-      <input type="range" id="lcsSizeRange" min="6" max="30" value="12" step="2" />
+      <label for="lcsSizeRange">sstable_size_in_mb <span class="val" id="lcsSizeVal">160</span></label>
+      <input type="range" id="lcsSizeRange" min="32" max="320" value="160" step="32" />
     </div>
 
     <div class="ctrl opt-group" data-for="twcs">
-      <label for="windowRange">compaction_window <span class="val" id="windowVal">20 ticks</span></label>
-      <input type="range" id="windowRange" min="8" max="48" value="20" step="4" />
+      <label for="windowSizeRange">compaction_window_size <span class="val" id="windowSizeVal">1</span></label>
+      <input type="range" id="windowSizeRange" min="1" max="12" value="1" step="1" />
+    </div>
+
+    <div class="ctrl wide opt-group" data-for="twcs">
+      <label for="windowUnitSelect">compaction_window_unit <span class="val" id="windowDerived">24 h</span></label>
+      <select id="windowUnitSelect" class="form-input form-input--compact">
+        <option value="MINUTES">MINUTES</option>
+        <option value="HOURS">HOURS</option>
+        <option value="DAYS" selected>DAYS</option>
+      </select>
     </div>
 
     <div class="divider"></div>
@@ -605,10 +646,11 @@
           <div class="chart-legend">
             <span><i style="background:var(--series-space)"></i>Space</span>
             <span><i style="background:var(--series-write)"></i>Write</span>
+            <span><i style="background:var(--series-read)"></i>Read</span>
           </div>
         </div>
         <div class="chart-wrap">
-          <svg id="chart" viewBox="0 0 320 132" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Space amplification and write amplification over simulated time"></svg>
+          <svg id="chart" viewBox="0 0 320 196" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Two stacked plots sharing a time axis: space and write amplification as ratios, and read amplification as a file count per lookup"></svg>
           <div class="chart-tip" id="chartTip" hidden></div>
         </div>
       </div>
@@ -647,13 +689,31 @@
              current window, seal older windows, drop fully-expired SSTables
 
    One row of data == 1 "MB", so every size in the UI is in the same unit as the
-   CQL sub-properties it mirrors.
+   CQL sub-properties it mirrors, and every sub-property default below is the one
+   from the ScyllaDB source (master @ e2c99436cf):
+
+     sstable_size_in_mb        ICS 1000 / LCS 160
+     min|max_compaction_threshold  4 / 32
+     space_amplification_goal  null, valid range (1.0, 2.0]
+     compaction_window_size|unit   1 DAYS
+     bucket_low|high           0.5 / 1.5   min_sstable_size 50 MB
+     leveled_fan_out 10, MAX_LEVELS 9
+
+   The one number with no upstream default is the memtable flush threshold:
+   memtable_total_space_in_mb is value_status::Invalid in db/config.cc because the
+   real memtable is sized from available RAM. 256 MB is chosen here, and the write
+   rate, keyspace and compaction rate are derived from it.
    ========================================================================== */
 
-var KEYSPACE      = 240;   // distinct keys for the non-time-series workloads
-var COMPACT_RATE  = 24;    // MB of input merged per tick
+var KEYSPACE      = 20000; // distinct keys for the non-time-series workloads
+var COMPACT_RATE  = 512;   // MB of input merged per tick
 var HIST_MAX      = 240;   // points kept for the amplification chart
 var LCS_FANOUT    = 10;    // leveled_manifest::leveled_fan_out
+var LCS_MAX_LEVELS = 9;    // leveled_manifest::MAX_LEVELS
+var ICS_MIN_SSTABLE_SIZE = 50;  // incremental_compaction_strategy_options::DEFAULT_MIN_SSTABLE_SIZE
+var TICK_HOURS    = 1;     // one tick of simulated time == one hour of wall clock
+// time_window_compaction_strategy: the valid compaction_window_unit values.
+var WINDOW_UNIT_HOURS = { MINUTES: 1 / 60, HOURS: 1, DAYS: 24 };
 var MAX_THRESHOLD = 32;    // max_compaction_threshold default
 var MAX_L0        = 32;    // leveled_manifest::MAX_COMPACTING_L0
 
@@ -663,13 +723,18 @@ var $ = function (id) { return document.getElementById(id); };
 var opt = {
   strategy: "ics",
   workload: "hot",
-  rate: 3,
-  memThreshold: 12,
+  rate: 64,
+  // No ScyllaDB default to copy: memtable_total_space_in_mb is value_status::Invalid
+  // in db/config.cc — the real memtable is sized from available RAM. 256 MB is the
+  // anchor the rest of this scale is derived from.
+  memThreshold: 256,
   minThreshold: 4,
-  fragSize: 12,
+  fragSize: 1000,        // ICS sstable_size_in_mb — DEFAULT_MAX_FRAGMENT_SIZE_IN_MB
   sag: 0,
-  lcsSize: 12,
-  window: 20,
+  lcsSize: 160,          // LCS sstable_size_in_mb — DEFAULT_MAX_SSTABLE_SIZE_IN_MB
+  windowSize: 1,         // compaction_window_size — DEFAULT_COMPACTION_WINDOW_SIZE
+  windowUnit: "DAYS",    // compaction_window_unit — DEFAULT_COMPACTION_WINDOW_UNIT (86400s)
+  window: 24,            // derived: windowSize × unit, in ticks
   ttl: 0,
   speed: 1
 };
@@ -806,9 +871,7 @@ function maybeFlush() {
 // individual SSTables for STCS, whole runs for ICS.
 function getBuckets(items) {
   var bucketLow = 0.5, bucketHigh = 1.5;
-  // min_sstable_size defaults to 50 MB against ~256 MB+ real flushes; keep the
-  // same ratio at simulator scale instead of copying the absolute number.
-  var minSize = Math.max(1, Math.round(opt.memThreshold / 4));
+  var minSize = ICS_MIN_SSTABLE_SIZE;
   var sorted = items.slice().sort(function (a, b) { return a.size - b.size; });
   var buckets = [], avgs = [];
   for (var i = 0; i < sorted.length; i++) {
@@ -922,6 +985,9 @@ function maxBytesForLevel(l) {
   return l === 0 ? 4 * opt.lcsSize : Math.pow(LCS_FANOUT, l) * opt.lcsSize;
 }
 
+// leveled_manifest tops out at MAX_LEVELS; nothing is promoted past it.
+function cappedLevel(l) { return Math.min(l, LCS_MAX_LEVELS - 1); }
+
 function overlapping(list, minK, maxK) {
   return (list || []).filter(function (s) { return s.maxKey >= minK && s.minKey <= maxK; });
 }
@@ -957,11 +1023,13 @@ function pickLCS() {
     var chosen = lv[i][pickIdx];
     S.lastCompactedKey[i] = chosen.maxKey;
     if (pickIdx === lv[i].length - 1) S.lastCompactedKey[i] = -1;
-    var ov2 = overlapping(lv[i + 1], chosen.minKey, chosen.maxKey);
+    var target = cappedLevel(i + 1);
+    var ov2 = overlapping(lv[target], chosen.minKey, chosen.maxKey)
+      .filter(function (s) { return s !== chosen; });
     return {
       inputs: [chosen].concat(ov2),
-      level: i + 1,
-      reason: "L" + i + " score " + score.toFixed(2) + " > 1 -> push 1 SSTable + " + ov2.length + " overlapping into L" + (i + 1)
+      level: target,
+      reason: "L" + i + " score " + score.toFixed(2) + " > 1 -> push 1 SSTable + " + ov2.length + " overlapping into L" + target
     };
   }
   return null;
@@ -1148,7 +1216,7 @@ function record() {
   var sa = l > 0 ? d / l : 1;
   var wa = S.flushedBytes > 0 ? S.writtenBytes / S.flushedBytes : 1;
   if (sa > S.peakSA) S.peakSA = sa;
-  S.hist.push({ t: S.tick, sa: sa, wa: wa });
+  S.hist.push({ t: S.tick, sa: sa, wa: wa, ra: readAmp() });
   if (S.hist.length > HIST_MAX) S.hist.shift();
 }
 
@@ -1397,17 +1465,30 @@ function renderKPIs(rows) {
 }
 
 /* ------------------------------------------------------------------ chart -- */
-var CW = 320, CH = 132, PL = 26, PR = 34, PT = 10, PB = 16;
+/* Two plot bands stacked on a shared time axis. Space/write are ratios and read
+   amp is a file count, so they get separate bands with their own y-scales — a
+   second y-axis on one band would put two units on one plot and invite reading
+   a crossing as meaningful. */
+var CW = 320, CH = 196, PL = 26, PR = 34;
+var AT = 16,  AB = 108;   // band A — ratios, baseline 1.0
+var BT = 134, BB = 180;   // band B — read amp, baseline 0
 var chartHover = null;
 
 function chartScales() {
   var h = S.hist;
-  var maxY = 2;
-  for (var i = 0; i < h.length; i++) maxY = Math.max(maxY, h[i].sa, h[i].wa);
+  var maxY = 2, maxR = 4, i;
+  for (i = 0; i < h.length; i++) {
+    maxY = Math.max(maxY, h[i].sa, h[i].wa);
+    maxR = Math.max(maxR, h[i].ra);
+  }
   maxY = Math.ceil(maxY * 10) / 10;
-  var x = function (i) { return PL + (h.length < 2 ? 0 : (i / (h.length - 1)) * (CW - PL - PR)); };
-  var y = function (v) { return PT + (1 - (v - 1) / (maxY - 1)) * (CH - PT - PB); };
-  return { x: x, y: y, maxY: maxY };
+  maxR = Math.ceil(maxR / 2) * 2;          // even, so the mid tick is a whole file
+  return {
+    x: function (i) { return PL + (h.length < 2 ? 0 : (i / (h.length - 1)) * (CW - PL - PR)); },
+    y: function (v) { return AT + (1 - (v - 1) / (maxY - 1)) * (AB - AT); },
+    r: function (v) { return BT + (1 - v / maxR) * (BB - BT); },
+    maxY: maxY, maxR: maxR
+  };
 }
 
 function renderChart() {
@@ -1416,30 +1497,50 @@ function renderChart() {
   var sc = chartScales();
   var parts = [];
 
-  [1, (1 + sc.maxY) / 2, sc.maxY].forEach(function (v) {
-    parts.push('<line class="grid" x1="' + PL + '" x2="' + (CW - PR) + '" y1="' + sc.y(v).toFixed(1) + '" y2="' + sc.y(v).toFixed(1) + '"/>');
-    parts.push('<text class="axis-text" x="' + (PL - 4) + '" y="' + (sc.y(v) + 3).toFixed(1) + '" text-anchor="end">' + v.toFixed(1) + "</text>");
-  });
+  function cap(x, y, txt) {
+    parts.push('<text class="band-cap" x="' + x + '" y="' + y + '">' + txt + "</text>");
+  }
+  function grid(v, yv, label) {
+    parts.push('<line class="grid" x1="' + PL + '" x2="' + (CW - PR) + '" y1="' + yv.toFixed(1) + '" y2="' + yv.toFixed(1) + '"/>');
+    parts.push('<text class="axis-text" x="' + (PL - 4) + '" y="' + (yv + 3).toFixed(1) + '" text-anchor="end">' + label + "</text>");
+  }
+
+  cap(PL, AT - 5, "space / write &mdash; × ratio");
+  [1, (1 + sc.maxY) / 2, sc.maxY].forEach(function (v) { grid(v, sc.y(v), v.toFixed(1)); });
+
+  cap(PL, BT - 5, "read &mdash; files per lookup");
+  [0, sc.maxR / 2, sc.maxR].forEach(function (v) { grid(v, sc.r(v), String(v)); });
+
+  // Shared time axis, labelled once under the lower band.
   parts.push('<text class="axis-text" x="' + PL + '" y="' + (CH - 3) + '">t' + h[0].t + "</text>");
   parts.push('<text class="axis-text" x="' + (CW - PR) + '" y="' + (CH - 3) + '" text-anchor="end">t' + h[h.length - 1].t + "</text>");
 
-  ["sa", "wa"].forEach(function (k) {
-    var pts = h.map(function (p, i) { return sc.x(i).toFixed(1) + "," + sc.y(p[k]).toFixed(1); }).join(" ");
-    parts.push('<polyline class="line ' + (k === "sa" ? "space" : "write") + '" points="' + pts + '"/>');
+  [["sa", "space", "y"], ["wa", "write", "y"], ["ra", "read", "r"]].forEach(function (d) {
+    var pts = h.map(function (p, i) { return sc.x(i).toFixed(1) + "," + sc[d[2]](p[d[0]]).toFixed(1); }).join(" ");
+    parts.push('<polyline class="line ' + d[1] + '" points="' + pts + '"/>');
   });
 
-  // Direct labels at the live end — identity is never colour-alone.
+  // Direct labels at the live end — identity is never colour-alone. The two
+  // ratio labels share a band, so push them apart when they'd collide.
   var last = h[h.length - 1];
   var ys = sc.y(last.sa), yw = sc.y(last.wa);
   if (Math.abs(ys - yw) < 9) { if (ys < yw) { ys -= 4; yw += 5; } else { ys += 5; yw -= 4; } }
-  parts.push('<text class="dlabel space" x="' + (CW - PR + 4) + '" y="' + (ys + 3).toFixed(1) + '">' + last.sa.toFixed(2) + "×</text>");
-  parts.push('<text class="dlabel write" x="' + (CW - PR + 4) + '" y="' + (yw + 3).toFixed(1) + '">' + last.wa.toFixed(2) + "×</text>");
+  function dlabel(cls, y, txt) {
+    parts.push('<text class="dlabel ' + cls + '" x="' + (CW - PR + 4) + '" y="' + (y + 3).toFixed(1) + '">' + txt + "</text>");
+  }
+  dlabel("space", ys, last.sa.toFixed(2) + "×");
+  dlabel("write", yw, last.wa.toFixed(2) + "×");
+  dlabel("read", sc.r(last.ra), String(last.ra));
 
   if (chartHover !== null && chartHover >= 0 && chartHover < h.length) {
-    var p = h[chartHover], hx = sc.x(chartHover);
-    parts.push('<line class="crosshair" x1="' + hx.toFixed(1) + '" x2="' + hx.toFixed(1) + '" y1="' + PT + '" y2="' + (CH - PB) + '"/>');
-    parts.push('<circle class="hover-dot" cx="' + hx.toFixed(1) + '" cy="' + sc.y(p.sa).toFixed(1) + '" r="3.5" fill="var(--series-space)"/>');
-    parts.push('<circle class="hover-dot" cx="' + hx.toFixed(1) + '" cy="' + sc.y(p.wa).toFixed(1) + '" r="3.5" fill="var(--series-write)"/>');
+    var p = h[chartHover], hx = sc.x(chartHover).toFixed(1);
+    // One segment per band, so the crosshair doesn't run through band B's caption.
+    [[AT, AB], [BT, BB]].forEach(function (b) {
+      parts.push('<line class="crosshair" x1="' + hx + '" x2="' + hx + '" y1="' + b[0] + '" y2="' + b[1] + '"/>');
+    });
+    [[sc.y(p.sa), "space"], [sc.y(p.wa), "write"], [sc.r(p.ra), "read"]].forEach(function (d) {
+      parts.push('<circle class="hover-dot" cx="' + hx + '" cy="' + d[0].toFixed(1) + '" r="3.5" fill="var(--series-' + d[1] + ')"/>');
+    });
   }
   svg.innerHTML = parts.join("");
 }
@@ -1456,8 +1557,10 @@ function bindChartHover() {
     chartHover = Math.max(0, Math.min(h.length - 1, i));
     var p = h[chartHover];
     tip.hidden = false;
-    tip.innerHTML = "t" + p.t + "<br><b style='color:var(--series-space)'>&#9679;</b> space " + p.sa.toFixed(2) +
-                    "&times;<br><b style='color:var(--series-write)'>&#9679;</b> write " + p.wa.toFixed(2) + "&times;";
+    tip.innerHTML = "t" + p.t +
+      "<br><b style='color:var(--series-space)'>&#9679;</b> space " + p.sa.toFixed(2) + "&times;" +
+      "<br><b style='color:var(--series-write)'>&#9679;</b> write " + p.wa.toFixed(2) + "&times;" +
+      "<br><b style='color:var(--series-read)'>&#9679;</b> read " + p.ra + (p.ra === 1 ? " file" : " files");
     var sc = chartScales();
     var px = (sc.x(chartHover) / CW) * r.width;
     tip.style.left = Math.min(r.width - tip.offsetWidth - 4, Math.max(0, px + 10)) + "px";
@@ -1526,7 +1629,35 @@ function showTwcsNotice() {
   el.hidden = noticeDismissed;
 }
 
+/* ------------------------------------------------------------- SAG advice -- */
+// Opens when the user switches to ICS, since space_amplification_goal is the one
+// ICS sub-property with no counterpart in the other strategies. Dismissal sticks
+// for the session — it is a tip, not a warning.
+var sagTipDismissed = false;
+
+function showSagNotice(open) {
+  var el = $("sagNotice");
+  if (opt.strategy !== "ics") { el.hidden = true; return; }
+  if (open && !sagTipDismissed) {
+    $("sagNoticeBody").innerHTML = "<b>ICS-only knob.</b> Left at <b>null</b>, ICS only ever merges runs of " +
+      "similar size, so the largest tiers keep their duplicate copies. Set a goal and ICS gains a " +
+      "last-resort job: when there is no normal compaction to do, it merges the two largest tiers if " +
+      "together they inflate the largest by more than the goal. Lower goal &rarr; less space, more writes.";
+    el.hidden = false;
+  }
+}
+
 /* --------------------------------------------------------------- controls -- */
+// compaction_window_size × compaction_window_unit -> ticks. A tick is an hour, so
+// the default (1 DAYS) is 24 ticks. Sub-tick windows (small MINUTES values) clamp
+// to 1 — the label shows the real duration either way.
+function syncWindow() {
+  var hours = opt.windowSize * WINDOW_UNIT_HOURS[opt.windowUnit];
+  opt.window = Math.max(1, Math.round(hours / TICK_HOURS));
+  var el = $("windowDerived");
+  if (el) el.textContent = hours < 1 ? "< 1 h (clamped)" : hours + " h";
+}
+
 function syncOptGroups() {
   document.querySelectorAll(".opt-group").forEach(function (g) {
     g.hidden = g.dataset.for.split(" ").indexOf(opt.strategy) === -1;
@@ -1581,19 +1712,29 @@ function init() {
     if (opt.strategy === "twcs" && opt.workload !== "ts") {
       opt.workload = "ts";
       $("workloadSelect").value = "ts";
-      if (opt.ttl === 0) opt.ttl = 100;
+      if (opt.ttl === 0) opt.ttl = 96;
     }
     syncOptGroups();
     showTwcsNotice();
+    showSagNotice(true);
     reset();
   });
   $("workloadSelect").addEventListener("change", function () {
     opt.workload = this.value;
     // A time-series workload without a TTL just grows forever — which is exactly
     // the shape TWCS is built for, so switch the TTL on with it.
-    if (opt.workload === "ts" && opt.ttl === 0) opt.ttl = 100;
+    if (opt.workload === "ts" && opt.ttl === 0) opt.ttl = 96;
     showTwcsNotice();
     reset();
+  });
+  // Touching the knob is as good as reading the tip.
+  $("sagSelect").addEventListener("change", function () {
+    $("sagNotice").hidden = true;
+    sagTipDismissed = true;
+  });
+  $("sagNoticeClose").addEventListener("click", function () {
+    $("sagNotice").hidden = true;
+    sagTipDismissed = true;
   });
   $("twcsNoticeClose").addEventListener("click", function () {
     $("twcsNotice").hidden = true;
@@ -1604,7 +1745,17 @@ function init() {
   bind("fragRange", "fragSize");
   bind("sagSelect", "sag");
   bind("lcsSizeRange", "lcsSize");
-  bind("windowRange", "window", function (v) { return v + " ticks"; }, true);
+  $("windowSizeRange").addEventListener("input", function () {
+    opt.windowSize = Number(this.value);
+    $("windowSizeVal").textContent = opt.windowSize;
+    syncWindow();
+    reset();
+  });
+  $("windowUnitSelect").addEventListener("change", function () {
+    opt.windowUnit = this.value;
+    syncWindow();
+    reset();
+  });
   bind("speedRange", "speed", function (v) { return v + "×"; });
 
   $("btnPlay").addEventListener("click", function () {
@@ -1621,6 +1772,7 @@ function init() {
   $("btnReset").addEventListener("click", function () { reset(); });
 
   bindChartHover();
+  syncWindow();
   syncOptGroups();
   showTwcsNotice();
   reset();
