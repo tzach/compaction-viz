@@ -574,7 +574,8 @@
 
     <div class="ctrl" style="min-width:104px;">
       <label for="speedRange">Speed <span class="val" id="speedVal">1&times;</span></label>
-      <input type="range" id="speedRange" min="1" max="8" value="1" step="1" />
+      <!-- Index into SPEEDS, because the steps are not evenly spaced. -->
+      <input type="range" id="speedRange" min="0" max="9" value="2" step="1" />
     </div>
   </div>
 
@@ -716,6 +717,7 @@ var TICK_HOURS    = 1;     // one tick of simulated time == one hour of wall clo
 var WINDOW_UNIT_HOURS = { MINUTES: 1 / 60, HOURS: 1, DAYS: 24 };
 var MAX_THRESHOLD = 32;    // max_compaction_threshold default
 var MAX_L0        = 32;    // leveled_manifest::MAX_COMPACTING_L0
+var SPEEDS        = [0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8];  // speed slider steps
 
 var $ = function (id) { return document.getElementById(id); };
 
@@ -1691,6 +1693,21 @@ function bind(id, key, fmt, needsReset) {
   if (valEl) valEl.textContent = fmt ? fmt(opt[key]) : opt[key];
 }
 
+/* The speed slider moves through SPEEDS by index, so it can hold the slow
+   fractional steps and the whole numbers on one evenly spaced track. */
+function bindSpeed() {
+  var el = $("speedRange"), valEl = $("speedVal");
+  function apply() {
+    opt.speed = SPEEDS[Number(el.value)];
+    valEl.textContent = opt.speed + "×";
+    render();
+  }
+  el.addEventListener("input", apply);
+  el.addEventListener("change", apply);
+  el.value = String(SPEEDS.indexOf(opt.speed));
+  valEl.textContent = opt.speed + "×";
+}
+
 function loop() {
   if (timer) clearTimeout(timer);
   timer = setTimeout(function () {
@@ -1756,7 +1773,7 @@ function init() {
     syncWindow();
     reset();
   });
-  bind("speedRange", "speed", function (v) { return v + "×"; });
+  bindSpeed();
 
   $("btnPlay").addEventListener("click", function () {
     running = !running;
