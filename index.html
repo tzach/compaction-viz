@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ScyllaDB Compaction Strategy Simulator — Write, Flush, Compact</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='64'%20height='64'%20viewBox='14%2033%20173%20173'%3E%3Cpath%20fill='%2357D1E5'%20d='M100.5%2039C62.5238%2039%2036%2062.5028%2036%2096.1526C36%20105.504%2041.7103%20136.124%2046.5237%20160.273C49.9876%20177.652%2052.9855%20191.678%2053.0574%20192.013C54.0194%20196.269%2058.158%20199.053%2062.5222%20198.335L63.4291%20198.194L62.7811%20197.547C61.5501%20196.321%2060.6483%20194.828%2060.1706%20193.238C59.9067%20192.314%2059.7831%20191.528%2059.6629%20190.767C59.6094%20190.423%2059.5543%20190.081%2059.4908%20189.738L57.809%20179.562C57.0658%20174.958%2056.3576%20170.385%2055.7079%20165.97C55.6645%20165.676%2055.8699%20165.401%2056.1672%20165.358C56.4561%20165.32%2056.7167%20165.504%2056.7751%20165.78C57.6971%20170.124%2058.624%20174.658%2059.5309%20179.252L61.4917%20189.384C61.5568%20189.703%2061.6203%20190.038%2061.6821%20190.37C61.8324%20191.169%2061.9861%20191.997%2062.1781%20192.613C62.7193%20194.35%2063.8633%20195.882%2065.4015%20196.932C65.5702%20197.047%2065.7406%20197.16%2065.9159%20197.261C66.7861%20197.767%2067.7398%20198.107%2068.7485%20198.27C69.7707%20198.436%2070.7945%20198.411%2071.7882%20198.197C72.8855%20197.971%2073.9645%20197.487%2074.9114%20196.804L75.2822%20196.537L75.0183%20196.163C74.2651%20195.093%2073.734%20193.924%2073.4367%20192.693C73.2162%20191.744%2073.1411%20190.93%2073.0693%20190.142C73.0392%20189.813%2073.0091%20189.486%2072.9707%20189.163L71.9569%20178.937C71.5127%20174.262%2071.1068%20169.671%2070.7527%20165.29C70.741%20165.145%2070.7861%20165.008%2070.8797%20164.898C70.9732%20164.788%2071.1051%20164.722%2071.2504%20164.71C71.5427%20164.683%2071.7882%20164.89%2071.83%20165.17C72.4613%20169.521%2073.091%20174.086%2073.6989%20178.741L74.9933%20188.941C75.0367%20189.253%2075.0734%20189.571%2075.1119%20189.888C75.2154%20190.739%2075.3123%20191.543%2075.4776%20192.183C75.6664%20192.929%2075.972%20193.655%2076.3812%20194.34C76.9674%20195.317%2077.7708%20196.183%2078.706%20196.846L78.7812%20196.901C78.833%20196.939%2078.8831%20196.977%2078.9349%20197.01C80.6084%20198.117%2082.7144%20198.581%2084.722%20198.287C86.7078%20197.994%2088.5851%20196.931%2089.8661%20195.374C90.1834%20194.998%2090.4707%20194.584%2090.7195%20194.144L90.8231%20193.959L90.7513%20193.762C90.5976%20193.33%2090.464%20192.869%2090.3454%20192.359C90.1901%20191.648%2090.1133%20190.769%2090.1082%20189.665L90.0281%20184.613C89.9095%20178.215%2089.8577%20171.608%2089.8728%20164.414C89.8728%20164.117%2090.1149%20163.876%2090.4156%20163.876C90.7012%20163.876%2090.9383%20164.1%2090.9567%20164.383C91.3876%20171.587%2091.72%20178.186%2091.9705%20184.555L92.1826%20189.6C92.2193%20190.514%2092.2461%20191.176%2092.4147%20191.932C92.5667%20192.53%2092.7939%20193.31%2093.1897%20194.003C93.2114%20194.046%2093.2365%20194.084%2093.2832%20194.157C94.7095%20196.721%2097.4854%20198.361%20100.365%20198.361H100.488C103.369%20198.423%20106.277%20196.75%20107.74%20194.129C107.765%20194.091%20107.79%20194.052%20107.804%20194.024C108.133%20193.443%20108.388%20192.758%20108.584%20191.927C108.746%20191.214%20108.774%20190.586%20108.812%20189.717L109.028%20184.557C109.263%20178.521%20109.592%20171.922%20110.037%20164.383C110.055%20164.085%20110.314%20163.863%20110.609%20163.876C110.895%20163.892%20111.119%20164.128%20111.121%20164.414C111.126%20171.967%20111.072%20178.573%20110.959%20184.613L110.877%20189.665C110.868%20190.368%20110.855%20191.433%20110.646%20192.352C110.538%20192.846%20110.402%20193.32%20110.245%20193.758L110.175%20193.958L110.279%20194.142C110.528%20194.584%20110.815%20194.998%20111.129%20195.37C112.42%20196.942%20114.299%20198.004%20116.28%20198.28C118.291%20198.574%20120.402%20198.112%20122.065%20197.017C122.119%20196.982%20122.169%20196.946%20122.22%20196.907L122.296%20196.853C123.234%20196.196%20124.039%20195.33%20124.624%20194.348C125.033%20193.66%20125.334%20192.934%20125.517%20192.186C125.679%20191.54%20125.778%20190.727%20125.883%20189.87C125.92%20189.561%20125.958%20189.248%20126%20188.939L127.293%20178.746C127.901%20174.098%20128.53%20169.533%20129.163%20165.174C129.183%20165.031%20129.26%20164.904%20129.375%20164.82C129.491%20164.733%20129.634%20164.697%20129.776%20164.717C130.059%20164.757%20130.261%20165.012%20130.239%20165.295C129.885%20169.685%20129.477%20174.277%20129.035%20178.94L128.021%20189.158C127.983%20189.486%20127.952%20189.807%20127.922%20190.131C127.849%20190.923%20127.774%20191.743%20127.558%20192.693C127.268%20193.931%20126.738%20195.103%20125.985%20196.176L125.723%20196.55L126.094%20196.818C127.041%20197.501%20128.121%20197.979%20129.213%20198.199C130.211%20198.405%20131.229%20198.43%20132.238%20198.268C133.257%20198.109%20134.214%20197.772%20135.084%20197.266C135.259%20197.165%20135.43%20197.054%20135.597%20196.941C137.148%20195.889%20138.292%20194.353%20138.819%20192.618C139.007%20191.993%20139.164%20191.158%20139.316%20190.35C139.378%20190.026%20139.438%20189.702%20139.502%20189.384L141.461%20179.257C142.369%20174.658%20143.296%20170.123%20144.218%20165.784C144.28%20165.493%20144.569%20165.307%20144.859%20165.366C145.138%20165.425%20145.325%20165.692%20145.285%20165.973C144.636%20170.38%20143.931%20174.952%20143.184%20179.562L141.504%20189.732C141.441%20190.082%20141.386%20190.421%20141.332%20190.764C141.212%20191.526%20141.088%20192.316%20140.829%20193.236C140.365%20194.83%20139.467%20196.322%20138.229%20197.554L137.653%20198.144L138.464%20198.337L138.511%20198.347C138.964%20198.421%20139.416%20198.458%20139.861%20198.458C143.667%20198.458%20147.076%20195.822%20147.941%20191.997C148.013%20191.659%20151.118%20177.125%20154.658%20159.314C159.43%20135.308%20164.995%20105.347%20164.995%2096.1576C165%2062.5028%20138.476%2039%20100.5%2039Z'/%3E%3Cpath%20fill='%2393E1EF'%20d='M54.462%2054.5662C42.8093%2064.6682%2036%2079.1076%2036%2096.1527C36%20112.231%2052.8853%20191.213%2053.0574%20192.014C53.4382%20193.699%2054.3233%20195.148%2055.5158%20196.244C51.3271%20176.301%2037.9975%20111.661%2037.9975%2096.6778C37.9975%2079.8853%2044.0017%2065.3928%2054.462%2054.5662Z'/%3E%3Cpath%20fill='%234D9BB6'%20d='M83.2338%2063.6694C67.7631%2063.6694%2055.175%2076.1944%2055.175%2091.5876C55.175%20106.981%2067.7631%20119.506%2083.2338%20119.506C98.7045%20119.506%20111.292%20106.981%20111.292%2091.5876C111.292%2076.1944%2098.7045%2063.6694%2083.2338%2063.6694Z'/%3E%3Cpath%20fill='%23ffffff'%20d='M52.3909%2089.3342C52.3909%20104.727%2064.9789%20117.252%2080.4513%20117.252C95.9236%20117.252%20108.51%20104.727%20108.51%2089.3342C108.51%2073.9409%2095.922%2061.4143%2080.4513%2061.4143C64.9806%2061.4143%2052.3909%2073.9393%2052.3909%2089.3342Z'/%3E%3Cpath%20fill='%233B2D55'%20d='M99.6014%2089.743C99.1905%20101.465%2090.7729%20107.667%2085.405%20106.404C80.9056%20105.346%2080.3461%2095.3948%2083.1603%2092.7824C85.0092%2091.0675%2088.6802%2090.6022%2088.7253%2089.3641C88.7687%2088.1277%2085.1378%2087.4082%2083.4142%2085.5686C80.7903%2082.7684%2082.0446%2072.8807%2086.6075%2072.1363C92.0506%2071.2489%20100.012%2078.019%2099.6014%2089.7413'/%3E%3Cpath%20fill='%233B2D55'%20d='M62.6273%20127.491C79.6863%20129.967%2097.5771%20125.734%20111.667%20115.88C113.626%20114.582%20115.64%20117.404%20113.723%20118.81C106.255%20123.88%2097.8276%20127.527%2089.0275%20129.507C80.2358%20131.489%2071.0783%20131.805%2062.188%20130.437C61.3713%20130.311%2060.8118%20129.551%2060.9371%20128.739C61.0623%20127.933%2061.8173%20127.378%2062.6273%20127.492'/%3E%3Cpath%20fill='%233B2D55'%20d='M113.639%20120.539C113.158%20118.284%20111.104%20116.519%20108.844%20116.44C106.474%20116.274%20106.629%20112.809%20109.008%20112.855C110.933%20113.109%20112.726%20114.13%20113.975%20115.516C115.044%20116.543%20117.392%20121.153%20114.91%20121.49C114.299%20121.538%20113.758%20121.119%20113.639%20120.538'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <script>
 // ScyllaDB DS theme boot snippet (runs before the stylesheet so there's no flash).
 // No manual toggle — it just follows the OS, same as the HA simulator.
@@ -123,6 +123,9 @@
   }
   header.top h1 span.accent { color: var(--accent); }
   .head-right { display: flex; align-items: center; gap: 8px; }
+  /* Feedback for the Share button. It replaces nothing on screen, so it is a
+     live region rather than a tooltip. */
+  .share-msg { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
 
   /* ---------- cards ---------- */
   .panel {
@@ -468,6 +471,9 @@
       <button type="button" class="btn btn--xs" id="btnStep">Step</button>
       <button type="button" class="btn btn--xs btn--primary" id="btnPlay">Pause</button>
       <button type="button" class="btn btn--xs" id="btnReset">Reset</button>
+      <button type="button" class="btn btn--xs" id="btnShare"
+              title="Copy a link that opens the simulator at this exact state">Share</button>
+      <span class="share-msg" id="shareMsg" role="status" aria-live="polite" hidden></span>
     </div>
   </header>
 
@@ -1117,7 +1123,9 @@ function pickForStrategy() {
   return pickTWCS();
 }
 
-function tick() {
+// One step of the model, with no painting. Kept separate from tick() so a shared
+// link can replay hundreds of steps in one frame.
+function stepModel() {
   S.tick++;
   doWrites();
   maybeFlush();
@@ -1128,6 +1136,10 @@ function tick() {
     if (p) startJob(p, opt.strategy);
   }
   record();
+}
+
+function tick() {
+  stepModel();
   render();
 }
 
@@ -1527,6 +1539,157 @@ function showTwcsNotice() {
   el.hidden = noticeDismissed;
 }
 
+/* ------------------------------------------------------------ share link -- */
+/* The run is a pure function of `opt` plus the number of ticks elapsed — the PRNG
+   is seeded from a constant — so a link only has to carry the settings and how far
+   the run got. Opening it replays the run from tick 0 in a single frame.
+
+   The one thing a link cannot carry is a setting that was changed *mid-run*: the
+   replay applies the settings from tick 0, so a link taken after you moved a
+   slider shows the run that setting would have produced all along. */
+
+var MAX_SHARE_TICK = 4000;   // a hand-edited tick= must not freeze the browser
+var STRATEGIES = ["lcs", "ics", "twcs"];
+var WORKLOADS  = ["hot", "uniform", "ts"];
+var SAG_VALUES = [0, 1.25, 1.5, 2];
+
+function shareURL() {
+  var p = new URLSearchParams();
+  p.set("strategy", opt.strategy);
+  p.set("workload", opt.workload);
+  // Only the sub-properties the selected strategy actually reads — the same rule
+  // the controls follow, so the link reads like the panel looks.
+  if (opt.strategy === "ics") {
+    p.set("min_threshold", opt.minThreshold);
+    p.set("sstable_size", opt.fragSize);
+    p.set("sag", opt.sag);
+  } else if (opt.strategy === "lcs") {
+    p.set("sstable_size", opt.lcsSize);
+  } else {
+    p.set("min_threshold", opt.minThreshold);
+    p.set("window", opt.window);
+  }
+  if (opt.ttl > 0) p.set("ttl", opt.ttl);
+  if (opt.speed !== 1) p.set("speed", opt.speed);
+  p.set("tick", Math.min(S.tick, MAX_SHARE_TICK));
+  return location.href.split(/[?#]/)[0] + "?" + p.toString();
+}
+
+function numParam(p, name, lo, hi, step, dflt) {
+  if (!p.has(name)) return dflt;
+  var v = Number(p.get(name));
+  if (!isFinite(v)) return dflt;
+  v = Math.round(v / step) * step;                  // snap to the control's step
+  return Math.min(hi, Math.max(lo, v));
+}
+
+function enumParam(p, name, allowed, dflt) {
+  var v = p.get(name);
+  return allowed.indexOf(v) === -1 ? dflt : v;
+}
+
+// Reads the query string into `opt`. Returns the tick to fast-forward to.
+function readShareURL() {
+  var p = new URLSearchParams(location.search);
+  if (!p.toString()) return 0;
+
+  opt.strategy = enumParam(p, "strategy", STRATEGIES, opt.strategy);
+  opt.workload = enumParam(p, "workload", WORKLOADS, opt.workload);
+  opt.minThreshold = numParam(p, "min_threshold", 2, 8, 1, opt.minThreshold);
+  if (opt.strategy === "lcs") opt.lcsSize = numParam(p, "sstable_size", 6, 30, 2, opt.lcsSize);
+  else opt.fragSize = numParam(p, "sstable_size", 4, 48, 4, opt.fragSize);
+  if (p.has("sag") && SAG_VALUES.indexOf(Number(p.get("sag"))) !== -1) opt.sag = Number(p.get("sag"));
+  opt.window = numParam(p, "window", 8, 48, 4, opt.window);
+  opt.ttl = numParam(p, "ttl", 0, MAX_SHARE_TICK, 1, opt.ttl);
+  opt.speed = numParam(p, "speed", 1, 8, 1, opt.speed);
+
+  // The same two couplings the controls enforce, so a hand-edited link cannot
+  // reach a combination the UI refuses to produce.
+  if (opt.strategy === "twcs") opt.workload = "ts";
+  if (opt.workload === "ts" && opt.ttl === 0) opt.ttl = 100;
+
+  // The TWCS tip reports a switch the reader did not make, and it covers the write
+  // path on arrival. Start it closed; the warning it also carries can still open it.
+  noticeDismissed = true;
+
+  return numParam(p, "tick", 0, MAX_SHARE_TICK, 1, 0);
+}
+
+// Push `opt` back into the controls, for the values that came from a link.
+function syncControls() {
+  $("strategySelect").value = opt.strategy;
+  $("workloadSelect").value = opt.workload;
+  $("minThRange").value = opt.minThreshold;
+  $("fragRange").value = opt.fragSize;
+  $("sagSelect").value = String(opt.sag);
+  $("lcsSizeRange").value = opt.lcsSize;
+  $("windowRange").value = opt.window;
+  $("speedRange").value = opt.speed;
+}
+
+function pause() {
+  running = false;
+  $("btnPlay").textContent = "Play";
+  $("btnPlay").classList.remove("btn--primary");
+}
+
+function fastForward(n) {
+  for (var i = 0; i < n; i++) stepModel();
+  // Nothing on screen has just landed, so clear the drop-in flags — otherwise the
+  // whole disk animates in at once when a link opens.
+  S.ssts.forEach(function (s) { s.fresh = false; });
+  render();
+}
+
+// Once the reader touches a control, the link in the address bar no longer
+// describes what is on screen. Drop it; the Share button mints a fresh one.
+var booting = true;
+function clearShareURL() {
+  if (booting || !location.search) return;
+  try { history.replaceState(null, "", location.href.split(/[?#]/)[0]); } catch (e) { /* file:// */ }
+}
+
+var shareMsgTimer = null;
+function flashShare(msg) {
+  var el = $("shareMsg");
+  el.textContent = msg;
+  el.hidden = false;
+  clearTimeout(shareMsgTimer);
+  shareMsgTimer = setTimeout(function () { el.hidden = true; }, 3000);
+}
+
+// The old execCommand path first: it is synchronous, so the message on screen is
+// always true, and it also works from a file:// page, where the Clipboard API is
+// refused. The Clipboard API is the fallback for browsers that dropped it.
+function copyText(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
+  document.body.appendChild(ta);
+  ta.select();
+  var ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
+function doShare() {
+  var url = shareURL();
+  // Put the link in the address bar too, so a manual copy gets the same link.
+  try { history.replaceState(null, "", url); } catch (e) { /* file:// */ }
+
+  if (copyText(url)) { flashShare("Link copied"); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(
+      function () { flashShare("Link copied"); },
+      function () { flashShare("Copy the link from the address bar"); }
+    );
+    return;
+  }
+  flashShare("Copy the link from the address bar");
+}
+
 /* --------------------------------------------------------------- controls -- */
 function syncOptGroups() {
   document.querySelectorAll(".opt-group").forEach(function (g) {
@@ -1535,6 +1698,7 @@ function syncOptGroups() {
 }
 
 function reset(quiet) {
+  clearShareURL();
   S = newState();
   els.forEach(function (el) { el.remove(); });
   els.clear();
@@ -1554,7 +1718,7 @@ function bind(id, key, fmt, needsReset) {
     var v = el.type === "range" ? Number(el.value) : (isNaN(Number(el.value)) ? el.value : Number(el.value));
     opt[key] = v;
     if (valEl) valEl.textContent = fmt ? fmt(v) : v;
-    if (needsReset) reset(); else render();
+    if (needsReset) { reset(); } else { clearShareURL(); render(); }
   }
   el.addEventListener("input", apply);
   el.addEventListener("change", apply);
@@ -1570,6 +1734,9 @@ function loop() {
 }
 
 function init() {
+  // Settings first: bind() reads `opt` for its value labels, and reset() for the run.
+  var jumpTo = readShareURL();
+
   diskEl = $("disk");
   diskEl.innerHTML = '<div class="lane-layer" id="laneLayer"></div><div class="sst-layer" id="sstLayer"></div>';
   laneLayer = $("laneLayer");
@@ -1601,6 +1768,7 @@ function init() {
     noticeDismissed = true;
   });
 
+  syncControls();
   bind("minThRange", "minThreshold");
   bind("fragRange", "fragSize");
   bind("sagSelect", "sag");
@@ -1614,17 +1782,23 @@ function init() {
     this.classList.toggle("btn--primary", running);
   });
   $("btnStep").addEventListener("click", function () {
-    running = false;
-    $("btnPlay").textContent = "Play";
-    $("btnPlay").classList.remove("btn--primary");
+    pause();
     tick();
   });
   $("btnReset").addEventListener("click", function () { reset(); });
+  $("btnShare").addEventListener("click", doShare);
 
   bindChartHover();
   syncOptGroups();
   showTwcsNotice();
-  reset();
+  reset(jumpTo > 0);
+  if (jumpTo > 0) {
+    // Land on the shared state, stopped — the reader came to look at this tick,
+    // not to watch it scroll past.
+    fastForward(jumpTo);
+    pause();
+  }
+  booting = false;
   loop();
 }
 
