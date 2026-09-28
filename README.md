@@ -70,14 +70,15 @@ count, and the run replays from tick 0 with those settings.
 | `workload` | `hot`, `uniform`, `ts` |
 | `tick` | how many ticks to replay, 0&ndash;4000 |
 | `min_threshold` | 2&ndash;8 (ICS, TWCS) |
-| `sstable_size` | 4&ndash;48 for ICS, 6&ndash;30 for LCS |
+| `sstable_size` | 200&ndash;2000 for ICS, 32&ndash;320 for LCS |
 | `sag` | `0`, `1.25`, `1.5`, `2` (ICS) |
-| `window` | 8&ndash;48 ticks (TWCS) |
+| `window_size` | 1&ndash;12 (TWCS) |
+| `window_unit` | `MINUTES`, `HOURS`, `DAYS` (TWCS) |
 | `ttl` | rows expire after this many ticks |
-| `speed` | 1&ndash;8 |
+| `speed` | `0.25`, `0.5`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8` |
 
-Example — LCS on uniform keys, 18 MB SSTables, 200 ticks in:
-`?strategy=lcs&workload=uniform&sstable_size=18&tick=200`
+Example — LCS on uniform keys, 160 MB SSTables, 200 ticks in:
+`?strategy=lcs&workload=uniform&sstable_size=160&tick=200`
 
 Out-of-range or unknown values fall back to the default, and a link cannot reach a combination the
 controls refuse (TWCS always gets the time-series workload). A link taken after you move a slider
