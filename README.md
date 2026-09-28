@@ -58,6 +58,34 @@ sub-properties it mirrors.
 - **ICS with `space_amplification_goal` = 1.25.** An extra cross-tier compaction of the two largest
   tiers kicks in whenever (S0+S1)/S0 drifts above the goal, holding the space-amp line down.
 
+## Sharing a run
+
+**Share** copies a link to the state on screen, and opens the simulator paused at that state. The
+model is deterministic — one fixed PRNG seed — so the link only carries the settings and the tick
+count, and the run replays from tick 0 with those settings.
+
+| Parameter | Values |
+|---|---|
+| `strategy` | `lcs`, `ics`, `twcs` |
+| `workload` | `hot`, `uniform`, `ts` |
+| `tick` | how many ticks to replay, 0&ndash;4000 |
+| `min_threshold` | 2&ndash;8 (ICS, TWCS) |
+| `sstable_size` | 200&ndash;2000 for ICS, 32&ndash;320 for LCS |
+| `sag` | `0`, `1.25`, `1.5`, `2` (ICS) |
+| `window_size` | 1&ndash;12 (TWCS) |
+| `window_unit` | `MINUTES`, `HOURS`, `DAYS` (TWCS) |
+| `ttl` | rows expire after this many ticks |
+| `speed` | `0.25`, `0.5`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8` |
+
+Example — LCS on uniform keys, 160 MB SSTables, 200 ticks in:
+`?strategy=lcs&workload=uniform&sstable_size=160&tick=200`
+
+Out-of-range or unknown values fall back to the default, and a link cannot reach a combination the
+controls refuse (TWCS always gets the time-series workload). TWCS links now use
+`window_size`/`window_unit`; older `window` links are still accepted when that duration can be
+represented exactly by the current controls. A link taken after you move a slider mid-run shows the
+run that setting would have produced from the start.
+
 ## Running it
 
 **[Open the live simulator →](https://tzach.github.io/compaction-viz/)**
