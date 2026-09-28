@@ -81,8 +81,10 @@ Example — LCS on uniform keys, 160 MB SSTables, 200 ticks in:
 `?strategy=lcs&workload=uniform&sstable_size=160&tick=200`
 
 Out-of-range or unknown values fall back to the default, and a link cannot reach a combination the
-controls refuse (TWCS always gets the time-series workload). A link taken after you move a slider
-mid-run shows the run that setting would have produced from the start.
+controls refuse (TWCS always gets the time-series workload). TWCS links now use
+`window_size`/`window_unit`; older `window` links are still accepted when that duration can be
+represented exactly by the current controls. A link taken after you move a slider mid-run shows the
+run that setting would have produced from the start.
 
 ## Running it
 

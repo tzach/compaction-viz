@@ -1706,7 +1706,7 @@ function speedParam(p, dflt) {
 
 function setWindowControl(hours) {
   var maxSize = Number($("windowSizeRange").max);
-  [["DAYS", 24], ["HOURS", 1], ["MINUTES", 1 / 60]].some(function (entry) {
+  return [["DAYS", 24], ["HOURS", 1], ["MINUTES", 1 / 60]].some(function (entry) {
     var unit = entry[0], unitHours = entry[1], size = hours / unitHours;
     if (size >= 1 && size <= maxSize && Math.abs(size - Math.round(size)) < 1e-9) {
       opt.windowSize = Math.round(size);
@@ -1725,7 +1725,8 @@ function applyWindowParams(p) {
   }
 
   // Back-compat for old shared links that carried the derived window in ticks.
-  var ticks = numParam(p, "window", 8, 48, 4, 0);
+  var maxTicks = Number($("windowSizeRange").max) * WINDOW_UNIT_HOURS.DAYS / TICK_HOURS;
+  var ticks = numParam(p, "window", 1, maxTicks, 1, 0);
   if (ticks > 0) setWindowControl(ticks * TICK_HOURS);
 }
 
