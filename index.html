@@ -1704,6 +1704,19 @@ function speedParam(p, dflt) {
   return SPEEDS.indexOf(v) === -1 ? dflt : v;
 }
 
+function setWindowControl(hours) {
+  var maxSize = Number($("windowSizeRange").max);
+  [["DAYS", 24], ["HOURS", 1], ["MINUTES", 1 / 60]].some(function (entry) {
+    var unit = entry[0], unitHours = entry[1], size = hours / unitHours;
+    if (size >= 1 && size <= maxSize && Math.abs(size - Math.round(size)) < 1e-9) {
+      opt.windowSize = Math.round(size);
+      opt.windowUnit = unit;
+      return true;
+    }
+    return false;
+  });
+}
+
 function applyWindowParams(p) {
   if (p.has("window_size")) {
     opt.windowSize = numControlParam(p, "window_size", "windowSizeRange", opt.windowSize);
@@ -1712,14 +1725,8 @@ function applyWindowParams(p) {
   }
 
   // Back-compat for old shared links that carried the derived window in ticks.
-  var hours = numParam(p, "window", 1, 48, 1, 0);
-  if (hours >= 24 && hours % 24 === 0) {
-    opt.windowSize = hours / 24;
-    opt.windowUnit = "DAYS";
-  } else if (hours >= 1 && hours <= 12) {
-    opt.windowSize = hours;
-    opt.windowUnit = "HOURS";
-  }
+  var ticks = numParam(p, "window", 8, 48, 4, 0);
+  if (ticks > 0) setWindowControl(ticks * TICK_HOURS);
 }
 
 // Reads the query string into `opt`. Returns the tick to fast-forward to.
@@ -1731,7 +1738,7 @@ function readShareURL() {
   opt.workload = enumParam(p, "workload", WORKLOADS, opt.workload);
   opt.minThreshold = numControlParam(p, "min_threshold", "minThRange", opt.minThreshold);
   if (opt.strategy === "lcs") opt.lcsSize = numControlParam(p, "sstable_size", "lcsSizeRange", opt.lcsSize);
-  else opt.fragSize = numControlParam(p, "sstable_size", "fragRange", opt.fragSize);
+  else if (opt.strategy === "ics") opt.fragSize = numControlParam(p, "sstable_size", "fragRange", opt.fragSize);
   if (p.has("sag") && SAG_VALUES.indexOf(Number(p.get("sag"))) !== -1) opt.sag = Number(p.get("sag"));
   applyWindowParams(p);
   opt.ttl = numParam(p, "ttl", 0, MAX_SHARE_TICK, 1, opt.ttl);
